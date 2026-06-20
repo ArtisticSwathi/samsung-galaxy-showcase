@@ -1,15 +1,14 @@
 import { useState, useEffect } from 'react'
-import { synth } from '../../utils/audioSynth'
 
-export default function WelcomeScreen({ onLoadComplete }) {
+export default function WelcomeScreen({ onLoadComplete, onStartExperience }) {
   // Loading sequence states
   const [progress, setProgress] = useState(0)
   const [loadingStatus, setLoadingStatus] = useState("INITIATING CORE COMPILING...")
   const [isLoaderFading, setIsLoaderFading] = useState(false)
   const [isLoaderActive, setIsLoaderActive] = useState(true)
 
-  // Sound and interaction state
-  const [soundEnabled, setSoundEnabled] = useState(false)
+  // Fade-out transition state
+  const [isFadingOut, setIsFadingOut] = useState(false)
 
   // Word-by-word cinematic reveal states
   const [wordHeading1, setWordHeading1] = useState(false)
@@ -102,8 +101,7 @@ export default function WelcomeScreen({ onLoadComplete }) {
       const x = (e.clientX / window.innerWidth) * 2 - 1; // normalized X (-1 to 1)
       const y = -(e.clientY / window.innerHeight) * 2 + 1; // normalized Y (-1 to 1)
       
-      // Update synth frequency shifts based on cursor coordinates
-      synth.updatePitch(x, y);
+      // Update custom properties for GPU-driven parallax rotation
       
       // Update custom properties for GPU-driven parallax rotation
       document.documentElement.style.setProperty('--mouse-x', x.toString());
@@ -116,29 +114,33 @@ export default function WelcomeScreen({ onLoadComplete }) {
     };
   }, [isLoaderActive]);
 
-  // Handle global click to enable sound
-  const handleContainerClick = () => {
-    if (isLoaderActive || soundEnabled) return;
-    synth.start();
-    setSoundEnabled(true);
+  // Transition logic
+  const handleStart = () => {
+    setIsFadingOut(true);
+    if (onStartExperience) {
+      onStartExperience();
+    }
   };
 
-  // Toggle sound explicitly via button
-  const toggleSound = (e) => {
+  // Handle global click to enter
+  const handleContainerClick = () => {
+    if (isLoaderActive || isFadingOut) return;
+    handleStart();
+  };
+
+  // Button click handler
+  const handleButtonClick = (e) => {
     e.stopPropagation(); // prevent root container click bubble
-    if (!soundEnabled) {
-      synth.start();
-      setSoundEnabled(true);
-    } else {
-      synth.stop();
-      setSoundEnabled(false);
-    }
+    if (isFadingOut) return;
+    handleStart();
   };
 
   return (
     <div 
       onClick={handleContainerClick}
-      className="fixed inset-0 w-full h-full z-40 flex flex-col justify-center items-center text-white px-6 bg-transparent select-none overflow-hidden"
+      className={`fixed inset-0 w-full h-full z-40 flex flex-col justify-center items-center text-white px-6 bg-transparent select-none overflow-hidden transition-all duration-[800ms] ease-in-out ${
+        isFadingOut ? 'opacity-0 pointer-events-none -translate-y-6' : 'opacity-100'
+      }`}
     >
       {/* Self-contained styling for Gold Metallic typography and animations */}
       <style>{`
@@ -362,14 +364,10 @@ export default function WelcomeScreen({ onLoadComplete }) {
         }`}
       >
         <button 
-          onClick={toggleSound}
-          className={`px-8 py-3.5 border text-[10px] font-mono tracking-[0.3em] uppercase transition-all duration-300 pointer-events-auto cursor-pointer ${
-            soundEnabled 
-              ? 'border-cyan-400/60 text-cyan-400 bg-cyan-950/15 shadow-[0_0_20px_rgba(6,182,212,0.25)] hover:border-cyan-400 hover:text-white' 
-              : 'border-slate-800 text-slate-400 hover:border-slate-400 hover:text-white bg-black/40 hover:bg-black/60 shadow-lg'
-          }`}
+          onClick={handleButtonClick}
+          className="px-10 py-4 border border-slate-700 text-slate-300 hover:border-cyan-400/85 hover:text-white bg-black/40 hover:bg-cyan-950/10 shadow-lg text-[10px] font-mono tracking-[0.3em] uppercase transition-all duration-300 pointer-events-auto cursor-pointer hover:shadow-[0_0_20px_rgba(6,182,212,0.15)]"
         >
-          {soundEnabled ? 'SOUND ENVIRONMENT ACTIVE' : 'CLICK ANYWHERE TO ENABLE SOUND'}
+          CLICK TO ENTER SHOWCASE
         </button>
       </footer>
     </div>
