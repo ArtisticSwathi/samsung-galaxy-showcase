@@ -1,120 +1,103 @@
 import { useEffect, useRef } from 'react'
-import { useGLTF, Sparkles, MeshReflectorMaterial } from '@react-three/drei'
+import { useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
 import gsap from 'gsap'
 
-export default function ShowroomEnvironment({ view }) {
+export default function ShowroomEnvironment({ revealed }) {
   const { scene } = useGLTF('/models/tabel.glb')
-  const contentRef = useRef()
+  const groupRef  = useRef()
+  const tweenRef  = useRef(null)
 
-  // Apply materials and normalize table scale/center
+  // White futuristic emissive materials on the table GLB
   useEffect(() => {
-    if (scene) {
-      scene.traverse((child) => {
-        if (child.isMesh) {
-          child.castShadow = true
-          child.receiveShadow = true
-          
-          if (child.material) {
-            child.material.metalness = 0.95
-            child.material.roughness = 0.12
-            child.material.color = new THREE.Color('#0a0d16') // Dark cosmic base
-            child.material.envMapIntensity = 2.5
-          }
+    if (!scene) return
+
+    scene.traverse((child) => {
+      if (child.isMesh) {
+        child.castShadow    = true
+        child.receiveShadow = true
+        if (child.material) {
+          child.material = child.material.clone()
+          child.material.color             = new THREE.Color('#d8e8ff')
+          child.material.metalness         = 0.85
+          child.material.roughness         = 0.08
+     
+          child.material.emissiveIntensity = 0.3
+          child.material.needsUpdate       = true
         }
-      })
-
-      // Normalize scale: force table to be exactly 0.95 units wide/deep
-      const box = new THREE.Box3().setFromObject(scene)
-      const size = new THREE.Vector3()
-      box.getSize(size)
-      const maxDim = Math.max(size.x, size.y, size.z)
-      if (maxDim > 0) {
-        const targetScale = 0.95 / maxDim
-        scene.scale.set(targetScale, targetScale, targetScale)
       }
+    })
 
-      // Center the table locally and offset so the table top sits at local y = 0
-      const localBox = new THREE.Box3().setFromObject(scene)
-      const center = new THREE.Vector3()
-      localBox.getCenter(center)
-      scene.position.set(-center.x, -localBox.max.y, -center.z)
+    // Table at 1.6 units — prominent but phone still hero
+// Table at a larger uniform size (scaled equally from all sides)
+    const box = new THREE.Box3().setFromObject(scene)
+    const sz  = new THREE.Vector3()
+    box.getSize(sz)
+    const maxDim = Math.max(sz.x, sz.y, sz.z)
+    
+if (maxDim > 0) {
+      // 4.8 is the exact width between your light beams!
+      scene.scale.set(4.8 / maxDim, 4.8 / maxDim, 4.8 / maxDim)
     }
+
+    // Top of table at y = 0
+    const lb = new THREE.Box3().setFromObject(scene)
+    const c  = new THREE.Vector3()
+    lb.getCenter(c)
+    scene.position.set(-c.x, -lb.max.y, -c.z)
   }, [scene])
 
-  const tweenRef = useRef(null)
-
-  // Control scale dynamically based on view to avoid mount/compile lag
+  // Reveal animation
   useEffect(() => {
-    if (!contentRef.current) return
+    if (!groupRef.current) return
+    if (tweenRef.current) tweenRef.current.kill()
 
-    if (view === 'welcome') {
-      gsap.set(contentRef.current.scale, { x: 0, y: 0, z: 0 })
-    } else if (view === 'guided-intro') {
-      gsap.set(contentRef.current.scale, { x: 0, y: 0, z: 0 })
-      if (tweenRef.current) tweenRef.current.kill()
-      tweenRef.current = gsap.to(contentRef.current.scale, {
-        x: 1,
-        y: 1,
-        z: 1,
-        duration: 1.2,
-        ease: 'power2.out',
-        delay: 4.0 // Starts precisely at t=4.0s (when flight ends)
+    if (revealed) {
+      gsap.set(groupRef.current.scale, { x: 0, y: 0, z: 0 })
+      tweenRef.current = gsap.to(groupRef.current.scale, {
+        x: 1, y: 1, z: 1, duration: 0.5, ease: 'power2.out',
       })
-    } else if (view === 'showroom') {
-      if (tweenRef.current) tweenRef.current.kill()
-      gsap.to(contentRef.current.scale, {
-        x: 1,
-        y: 1,
-        z: 1,
-        duration: 0.6,
-        ease: 'power2.out'
-      })
+    } else {
+      gsap.set(groupRef.current.scale, { x: 0, y: 0, z: 0 })
     }
 
-    return () => {
-      if (tweenRef.current) tweenRef.current.kill()
-    }
-  }, [view])
+    return () => { if (tweenRef.current) tweenRef.current.kill() }
+  }, [revealed])
 
   return (
-    <group>
-      {/* 2. Scaled Table Content group (holographically scales up together) */}
-      <group ref={contentRef}>
-        {/* Reflective Ground Table Surface */}
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.23, 0]} receiveShadow>
-          <planeGeometry args={[22, 22]} />
-          <MeshReflectorMaterial
-            blur={[400, 100]}
-            resolution={1024}
-            mixBlur={1.0}
-            mixStrength={35}
-            roughness={0.12}
-            depthScale={1.2}
-            minDepthThreshold={0.4}
-            maxDepthThreshold={1.4}
-            color="#060812" // Slate-dark metallic table
-            metalness={0.92}
-          />
-        </mesh>
+    <group ref={groupRef}>
 
-        {/* Table Pedestal Model */}
-        <primitive 
-          object={scene} 
-          position={[0, -0.23, 0]} 
+      {/* ── Large metallic platform / stage ── */}
+      {/* Main stage surface */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]} receiveShadow>
+     
+        <meshStandardMaterial
+          color="#8090aa"
+          metalness={0.92}
+          roughness={0.12}
+          envMapIntensity={1.8}
         />
+      </mesh>
 
-        {/* Localized Table Sparkles */}
-        <Sparkles 
-          count={35} 
-          scale={[1.2, 0.9, 1.2]} 
-          position={[0, -0.15, 0]} 
-          color="#22d3ee" 
-          size={3.0} 
-          speed={0.4} 
-          opacity={0.65} 
-        />
-      </group>
+      {/* Stage raised lip / edge — gives it physical thickness */}
+      <mesh position={[0, -0.035, 0]} receiveShadow castShadow>
+
+      </mesh>
+
+
+
+  {/* ── Product circle base (dark disc where phone sits) ── */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.001, 0]}>
+        {/* Changed 0.32 to 2.4 so it perfectly touches the light beams */}
+        <circleGeometry args={[2.4, 128]} />
+        <meshStandardMaterial color="#f3f3f3" metalness={0.9} roughness={0.1} />
+      </mesh>
+
+      {/* ── Table GLB model (sits on the platform, phone on top) ── */}
+      <primitive object={scene} position={[0, 0, 0]} />
+
+
+
     </group>
   )
 }
