@@ -257,26 +257,26 @@ function ShowroomLighting() {
           All cardinal distances equal (0.52 units). All diagonal distances equal.
       ──────────────────────────────────────────────────────────────────────────── */}
 
-      {/* Very dim scene ambient — baseline for unlit sides */}
-      <ambientLight intensity={0.04} color="#c0d4f0" />
+      {/* Very dim scene ambient */}
+      <ambientLight intensity={0.06} color="#c0d4f0" />
 
-      {/* OVERHEAD KEY — exactly above center, no Z bias */}
-      <pointLight position={[0,     1.05, 0]}    color="#ffffff" intensity={2.8} distance={1.2} decay={2} />
+      {/* OVERHEAD KEY — softbox character: wider distance, gentle decay */}
+      <pointLight position={[0,     1.05, 0]}    color="#ffffff" intensity={2.0} distance={2.2} decay={1.5} />
 
-      {/* CARDINAL RING — front / back / left / right at equal distances & intensities */}
-      <pointLight position={[0,     0.30,  0.52]} color="#e8f2ff" intensity={1.8} distance={0.90} decay={2} />
-      <pointLight position={[0,     0.30, -0.52]} color="#e8f2ff" intensity={1.8} distance={0.90} decay={2} />
-      <pointLight position={[-0.52, 0.30,  0]}    color="#ddeeff" intensity={1.8} distance={0.90} decay={2} />
-      <pointLight position={[0.52,  0.30,  0]}    color="#ddeeff" intensity={1.8} distance={0.90} decay={2} />
+      {/* CARDINAL RING — wraps further, softer falloff */}
+      <pointLight position={[0,     0.30,  0.52]} color="#e8f2ff" intensity={1.3} distance={1.6} decay={1.5} />
+      <pointLight position={[0,     0.30, -0.52]} color="#e8f2ff" intensity={1.3} distance={1.6} decay={1.5} />
+      <pointLight position={[-0.52, 0.30,  0]}    color="#ddeeff" intensity={1.3} distance={1.6} decay={1.5} />
+      <pointLight position={[0.52,  0.30,  0]}    color="#ddeeff" intensity={1.3} distance={1.6} decay={1.5} />
 
-      {/* DIAGONAL RING — 4 corners at equal distances & intensities */}
-      <pointLight position={[-0.37, 0.28,  0.37]} color="#cce4ff" intensity={1.2} distance={0.85} decay={2} />
-      <pointLight position={[0.37,  0.28,  0.37]} color="#cce4ff" intensity={1.2} distance={0.85} decay={2} />
-      <pointLight position={[-0.37, 0.28, -0.37]} color="#cce4ff" intensity={1.2} distance={0.85} decay={2} />
-      <pointLight position={[0.37,  0.28, -0.37]} color="#cce4ff" intensity={1.2} distance={0.85} decay={2} />
+      {/* DIAGONAL RING */}
+      <pointLight position={[-0.37, 0.28,  0.37]} color="#cce4ff" intensity={0.9} distance={1.4} decay={1.5} />
+      <pointLight position={[0.37,  0.28,  0.37]} color="#cce4ff" intensity={0.9} distance={1.4} decay={1.5} />
+      <pointLight position={[-0.37, 0.28, -0.37]} color="#cce4ff" intensity={0.9} distance={1.4} decay={1.5} />
+      <pointLight position={[0.37,  0.28, -0.37]} color="#cce4ff" intensity={0.9} distance={1.4} decay={1.5} />
 
-      {/* UNDER-GLOW — cyan accent from platform (fully symmetric, centered) */}
-      <pointLight position={[0,     0.04,  0]}    color="#22d3ee" intensity={0.8} distance={0.55} decay={2} />
+      {/* UNDER-GLOW — cyan platform accent */}
+      <pointLight position={[0,     0.04,  0]}    color="#22d3ee" intensity={0.6} distance={0.9} decay={1.8} />
     </group>
   )
 }
