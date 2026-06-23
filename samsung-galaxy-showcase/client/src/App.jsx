@@ -11,11 +11,8 @@ function App() {
 
   const handleStartExperience = () => {
     setView('guided-intro')
-    // Keep overlay and 2D background mounted for 1000ms to let CSS transitions complete
-    setTimeout(() => {
-      setShowWelcomeOverlay(false)
-      setShow2DBackground(false)
-    }, 1000)
+    setShowWelcomeOverlay(false)
+    setShow2DBackground(false)
   }
 
   return (
@@ -36,7 +33,7 @@ function App() {
       {/* 2. 3D Product Showroom Canvas (Fades in when view changes from 'welcome') */}
       {isLoaded && (
         <div 
-          className={`absolute inset-0 w-full h-full z-10 transition-opacity duration-[300ms] ease-in-out ${
+          className={`absolute inset-0 w-full h-full z-10 ${
             view !== 'welcome' ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
           }`}
         >

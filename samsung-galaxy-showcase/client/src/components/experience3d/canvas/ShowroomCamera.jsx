@@ -42,28 +42,52 @@ export default function ShowroomCamera({ view, onIntroComplete, onProgressUpdate
       targetCurve.current.getPointAt(0, lookTarget.current)
       camera.lookAt(lookTarget.current)
 
-      // Single uninterrupted 4.0s GSAP timeline
+      // Single uninterrupted 5.0s GSAP timeline
       flightRef.current = gsap.to(progress, {
         value: 1.0,
-        duration: 4.0,
-        ease: 'none', // linear interpolation of parameter t, easedT is piecewise below
+        duration: 5.0,
+        ease: 'none', // linear interpolation of progress parameter p, easedT is piecewise below
         onUpdate: () => {
-          const t = progress.value
+          const p = progress.value
           let easedT
-          if (t <= 0.75) {
-            // Constant speed from 0.0s to 3.0s (t = 0 to 0.75)
-            easedT = (8 / 7) * t
+          
+          if (p <= 0.54) {
+            // Constant speed from p = 0 to 0.54 (0.0s to 2.7s)
+            easedT = 1.605 * p
+          } else if (p <= 0.6) {
+            // Smooth deceleration to a stop in front of the door from p = 0.54 to 0.6 (2.7s to 3.0s)
+            const sec = 5.0 * p
+            easedT = 0.321 * (2.85 - Math.pow(3.0 - sec, 2) / 0.6)
+          } else if (p <= 0.76) {
+            // Stop/pause in front of the door from p = 0.6 to 0.76 (3.0s to 3.8s)
+            easedT = 0.915
           } else {
-            // Smooth quadratic deceleration from 3.0s to 4.0s (t = 0.75 to 1.0)
-            easedT = (-16 / 7) * Math.pow(t - 1.0, 2) + 1.0
+            // Resume forward movement and enter showroom from p = 0.76 to 1.0 (3.8s to 5.0s)
+            const u = (5.0 * p - 3.8) / 1.2
+            easedT = 0.915 + 0.085 * (u * u * (3 - 2 * u))
           }
 
-          // Evaluate positions using arc length parameterization to ensure constant velocity
+          // Evaluate positions using arc length parameterization
           positionCurve.current.getPointAt(easedT, camera.position)
           targetCurve.current.getPointAt(easedT, lookTarget.current)
 
+          // Subtlest micro-stabilization quiver during the pause phase to make the camera feel alive but stabilized
+          if (p > 0.6 && p <= 0.76) {
+            const waitTime = 5.0 * p - 3.0 // 0.0 to 0.8s
+            let envelope = 1.0
+            if (waitTime < 0.15) {
+              envelope = waitTime / 0.15
+            } else if (waitTime > 0.65) {
+              envelope = (0.8 - waitTime) / 0.15
+            }
+            const stabY = Math.sin(waitTime * 18.0) * 0.0008 * envelope
+            const stabX = Math.cos(waitTime * 15.0) * 0.0005 * envelope
+            camera.position.y += stabY
+            camera.position.x += stabX
+          }
+
           if (onProgressUpdate) {
-            onProgressUpdate(t)
+            onProgressUpdate(p)
           }
         },
         onComplete: () => {

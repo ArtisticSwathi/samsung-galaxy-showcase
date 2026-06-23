@@ -31,9 +31,9 @@ function SpaceBackground({ introProgressRef, view }) {
     let spaceFade = 1.0
 
     if (view === 'guided-intro' && introProgressRef.current !== undefined) {
-      const t = introProgressRef.current
-      if (t > 0.75) {
-        spaceFade = 1.0 - (t - 0.75) / 0.25
+      const p = introProgressRef.current
+      if (p > 0.76) {
+        spaceFade = 1.0 - (p - 0.76) / 0.24
       } else {
         spaceFade = 1.0
       }
@@ -80,7 +80,7 @@ function SpaceBackground({ introProgressRef, view }) {
 }
 
 // ─── Phone 3D component ────────────────────────────────────────────────────────
-function PhoneOnTable() {
+function PhoneOnTable({ introProgressRef, view }) {
   const { scene } = useGLTF('/models/samsung_s23_ultra_free.glb')
   const groupRef  = useRef()
   
@@ -103,8 +103,8 @@ function PhoneOnTable() {
           child.material.emissive        = new THREE.Color('#030508')
           child.material.emissiveIntensity = 0.1
           
-          child.material.transparent = false
-          child.material.opacity = 1.0
+          child.material.transparent = true
+          child.material.opacity = 0.0
           
           mats.push(child.material)
         }
@@ -129,6 +129,28 @@ function PhoneOnTable() {
     scene.position.set(-c.x, -lb.min.y, -c.z)
   }, [scene])
 
+  useFrame(() => {
+    let fade = 0.0
+    if (view === 'guided-intro' && introProgressRef.current !== undefined) {
+      const p = introProgressRef.current
+      if (p > 0.80) {
+        // Fade in from p = 0.80 (4.0s) to p = 1.0 (5.0s)
+        fade = (p - 0.80) / 0.20
+      } else {
+        fade = 0.0
+      }
+    } else if (view === 'showroom') {
+      fade = 1.0
+    }
+
+    materialsRef.current.forEach((mat) => {
+      if (mat) {
+        mat.opacity = fade
+        mat.transparent = fade < 0.99
+      }
+    })
+  })
+
   return (
     <group ref={groupRef} position={[0, 0, 0]} rotation={[0, Math.PI * 0.15, 0]}>
       <primitive object={scene} />
@@ -150,14 +172,14 @@ function ShowroomLighting() {
   useFrame(() => {
     const fade = 1.0
     
-    if (keyLight.current) keyLight.current.intensity = 3.2 * fade
-    if (leftFillLight.current) leftFillLight.current.intensity = 2.5 * fade
-    if (rightFillLight.current) rightFillLight.current.intensity = 2.5 * fade
-    if (rimLight.current) rimLight.current.intensity = 2.8 * fade
-    if (underGlow.current) underGlow.current.intensity = 4.5 * fade
-    if (ambientLightRef.current) ambientLightRef.current.intensity = 0.1 + 0.25 * fade
-    if (spotLightRef.current) spotLightRef.current.intensity = 12.0 * fade
-    if (wallGlowLightRef.current) wallGlowLightRef.current.intensity = 2.5 * fade
+    if (keyLight.current) keyLight.current.intensity = 1.8 * fade
+    if (leftFillLight.current) leftFillLight.current.intensity = 1.2 * fade
+    if (rightFillLight.current) rightFillLight.current.intensity = 1.2 * fade
+    if (rimLight.current) rimLight.current.intensity = 1.5 * fade
+    if (underGlow.current) underGlow.current.intensity = 2.2 * fade
+    if (ambientLightRef.current) ambientLightRef.current.intensity = 0.1 + 0.15 * fade
+    if (spotLightRef.current) spotLightRef.current.intensity = 6.0 * fade
+    if (wallGlowLightRef.current) wallGlowLightRef.current.intensity = 1.2 * fade
   })
 
   return (
@@ -242,7 +264,7 @@ export default function ProductShowroom({ view, onIntroComplete }) {
       <div className="absolute inset-0 w-full h-full pointer-events-auto">
         <Canvas
           shadows
-          camera={{ fov: 42, near: 0.1, far: 1000 }}
+          camera={{ fov: 42, near: 0.1, far: 1000, position: [0, 0.36, 95.0] }}
           gl={{ alpha: true, antialias: true, powerPreference: 'high-performance' }}
           style={{ background: 'transparent' }}
         >
@@ -250,8 +272,8 @@ export default function ProductShowroom({ view, onIntroComplete }) {
           <SpaceBackground introProgressRef={introProgressRef} view={view} />
 
           <ShowroomLighting />
-          <ShowroomEnvironment revealed={showroomRevealed} introProgressRef={introProgressRef} view={view} />
-          <PhoneOnTable />
+          <ShowroomEnvironment introProgressRef={introProgressRef} view={view} />
+          <PhoneOnTable       introProgressRef={introProgressRef} view={view} />
           <ShowroomCamera     view={view} onIntroComplete={onIntroComplete} onProgressUpdate={handleProgressUpdate} />
         </Canvas>
       </div>

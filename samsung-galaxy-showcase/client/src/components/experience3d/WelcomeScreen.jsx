@@ -138,8 +138,8 @@ export default function WelcomeScreen({ onLoadComplete, onStartExperience }) {
   return (
     <div 
       onClick={handleContainerClick}
-      className={`fixed inset-0 w-full h-full z-40 flex flex-col justify-center items-center text-white px-6 bg-transparent select-none overflow-hidden transition-all duration-[800ms] ease-in-out ${
-        isFadingOut ? 'opacity-0 pointer-events-none -translate-y-6' : 'opacity-100'
+      className={`fixed inset-0 w-full h-full z-40 flex flex-col justify-center items-center text-white px-6 bg-transparent select-none overflow-hidden ${
+        isFadingOut ? 'hidden pointer-events-none' : 'opacity-100'
       }`}
     >
       {/* Self-contained styling for Gold Metallic typography and animations */}

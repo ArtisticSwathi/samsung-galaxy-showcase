@@ -21,35 +21,35 @@ const DigitalWallShader = {
     void main() {
       vec2 uv = vUv;
       
-      // 1. Futuristic clean white digital background
-      vec3 colorBg = vec3(0.97, 0.98, 0.99); // Crisp white
-      vec3 colorGlow = vec3(0.94, 0.96, 0.98); // Very soft cool grey/blue
+      // 1. Futuristic dark carbon/navy digital background
+      vec3 colorBg = vec3(0.03, 0.05, 0.09); // Deep dark space navy
+      vec3 colorGlow = vec3(0.06, 0.10, 0.18); // Soft neon navy glow
       
-      // Dynamic moving ambient lighting wash (slow and smooth, no blobs)
+      // Dynamic moving ambient lighting wash
       float wash = sin(uv.x * 1.5 + uTime * 0.1) * cos(uv.y * 1.5 - uTime * 0.08) * 0.5 + 0.5;
       vec3 finalColor = mix(colorBg, colorGlow, wash * 0.6);
       
-      // 2. Extremely clean and thin digital tech grid
-      float gridX = sin(uv.x * 24.0) * 0.5 + 0.5;
+      // 2. Cyber neon tech grid (cyan color)
+      float gridX = sin(uv.x * 32.0) * 0.5 + 0.5;
       gridX = smoothstep(0.98, 0.995, gridX);
       
-      float gridY = sin(uv.y * 16.0) * 0.5 + 0.5;
+      float gridY = sin(uv.y * 20.0) * 0.5 + 0.5;
       gridY = smoothstep(0.98, 0.995, gridY);
       
       float gridMask = clamp(gridX + gridY, 0.0, 1.0);
-      finalColor = mix(finalColor, vec3(0.85, 0.88, 0.92), gridMask * 0.35);
+      finalColor = mix(finalColor, vec3(0.0, 0.70, 0.95), gridMask * 0.45);
       
-      // 3. Cyber laser light sweep
-      float sweep = sin(uv.y * 2.2 - uTime * 0.3) * 0.5 + 0.5;
-      sweep = pow(sweep, 6.0); // Soft glowing band
-      finalColor = mix(finalColor, vec3(0.75, 0.9, 0.98), sweep * 0.18);
+      // 3. Cyber laser light sweep (bright cyan sweep)
+      float sweep = sin(uv.y * 2.5 - uTime * 0.4) * 0.5 + 0.5;
+      sweep = pow(sweep, 8.0); // sharp glowing laser sweep
+      finalColor = mix(finalColor, vec3(0.0, 0.85, 1.0), sweep * 0.35);
       
       // Soft vignette
       float vignette = uv.x * (1.0 - uv.x) * uv.y * (1.0 - uv.y) * 16.0;
       vignette = pow(vignette, 0.3);
       finalColor *= mix(0.94, 1.0, vignette);
       
-      gl_FragColor = vec4(finalColor * uFade, 1.0);
+      gl_FragColor = vec4(finalColor, 1.0);
     }
   `
 }
@@ -66,6 +66,18 @@ export default function ShowroomEnvironment({ introProgressRef, view }) {
 
   const leftStripRef = useRef()
   const rightStripRef = useRef()
+
+  const leftDoorRef  = useRef()
+  const rightDoorRef = useRef()
+
+  const [doorTriggered, setDoorTriggered] = useState(false)
+  const doorTriggerTime = useRef(0)
+
+  const [doorCloseTriggered, setDoorCloseTriggered] = useState(false)
+  const doorCloseTime = useRef(0)
+  
+  const leftDoorMatRef = useRef()
+  const rightDoorMatRef = useRef()
 
   // Dimensions of walls (expanded for a spacious, luxurious flagship showroom)
   const wallHeight = 5.5
@@ -125,22 +137,105 @@ export default function ShowroomEnvironment({ introProgressRef, view }) {
     }
   }, [wallY])
 
-  // Update wall uTime
+  // Reset doors trigger states when intro view starts
+  useEffect(() => {
+    if (view === 'guided-intro') {
+      setDoorTriggered(false)
+      setDoorCloseTriggered(false)
+      doorTriggerTime.current = 0
+      doorCloseTime.current = 0
+      if (leftDoorMatRef.current) leftDoorMatRef.current.emissiveIntensity = 0.12
+      if (rightDoorMatRef.current) rightDoorMatRef.current.emissiveIntensity = 0.12
+    }
+  }, [view])
+
+  // Update wall uTime and slide doors based on flight progress
   useFrame((state) => {
+    // 1. Digital wall shader animation
     wallMaterialsRef.current.forEach((mat) => {
       if (mat && mat.uniforms) {
         mat.uniforms.uTime.value = state.clock.getElapsedTime()
-        if (mat.uniforms.uFade) {
-          mat.uniforms.uFade.value = 1.0
-        }
       }
     })
+
+    // 2. Door opening, scanning, and closing animation progress
+    let openProgress = 0.0
+    let currentEmissive = 0.12
+
+    if (view === 'guided-intro') {
+      const camPos = state.camera.position
+      const doorCenter = new THREE.Vector3(0, camPos.y, 8.0)
+      const distance = camPos.distanceTo(doorCenter)
+      const activationRadius = 4.0 // Trigger when camera is within 4 units of the doors (Z < 12.0)
+
+      // Trigger door opening
+      if (!doorTriggered && distance < activationRadius) {
+        setDoorTriggered(true)
+        doorTriggerTime.current = state.clock.getElapsedTime()
+      }
+
+      // Trigger door closing (only after camera Z is less than 8.0, meaning inside the showroom)
+      if (doorTriggered && !doorCloseTriggered && camPos.z < 8.0) {
+        setDoorCloseTriggered(true)
+        doorCloseTime.current = state.clock.getElapsedTime()
+      }
+
+      if (doorCloseTriggered && doorCloseTime.current > 0) {
+        // Doors are closing behind camera
+        const elapsedClose = state.clock.getElapsedTime() - doorCloseTime.current
+        const closeDuration = 0.6 // 600ms to slide shut
+        const d = Math.min(1.0, elapsedClose / closeDuration)
+        // openProgress goes from 1.0 to 0.0
+        openProgress = 1.0 - d * d * (3 - 2 * d)
+        currentEmissive = 0.12 * d
+      } else if (doorTriggered && doorTriggerTime.current > 0) {
+        // Doors are either scanning or opening
+        const elapsed = state.clock.getElapsedTime() - doorTriggerTime.current
+        
+        if (elapsed < 0.3) {
+          // Phase 1: Security Authorization Scan (0.3s duration)
+          // Pulse the cyan emissive intensity rapidly to show activation
+          openProgress = 0.0
+          currentEmissive = 0.12 + 0.68 * Math.sin(elapsed * Math.PI * 6.0)
+        } else {
+          // Phase 2: Slide doors open (0.5s duration, total 0.8s)
+          const openElapsed = elapsed - 0.3
+          const openDuration = 0.5
+          const d = Math.min(1.0, openElapsed / openDuration)
+          openProgress = d * d * (3 - 2 * d) // Cubic smoothstep ease
+          // Fade emissive glow back down to 0 as doors open
+          currentEmissive = 0.12 * (1.0 - openProgress)
+        }
+      } else {
+        openProgress = 0.0
+        currentEmissive = 0.12
+      }
+    } else if (view === 'showroom') {
+      openProgress = 0.0 // Keep fully closed in showroom mode to seal the entrance
+      currentEmissive = 0.12
+    }
+
+    // Direct Y-rotation translations for curved doors
+    if (leftDoorRef.current) {
+      leftDoorRef.current.rotation.y = 0.436 * openProgress
+    }
+    if (rightDoorRef.current) {
+      rightDoorRef.current.rotation.y = -0.436 * openProgress
+    }
+
+    // Apply emissive intensity to the door glass materials
+    if (leftDoorMatRef.current) {
+      leftDoorMatRef.current.emissiveIntensity = currentEmissive
+    }
+    if (rightDoorMatRef.current) {
+      rightDoorMatRef.current.emissiveIntensity = currentEmissive
+    }
   })
 
   return (
     <group ref={groupRef}>
 
-      {/* ── Polished Floor with Reflections (White Theme - Expanded) ── */}
+      {/* ── Polished Floor with Reflections (Dark Obsidian Theme) ── */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -tableHeight, 0]} receiveShadow>
         <planeGeometry args={[25, 25]} />
         <MeshReflectorMaterial
@@ -148,12 +243,12 @@ export default function ShowroomEnvironment({ introProgressRef, view }) {
           resolution={1024}
           mixBlur={1.0}
           mixStrength={3.0}
-          roughness={0.08}
+          roughness={0.05}
           depthScale={1.0}
           minDepthThreshold={0.2}
           maxDepthThreshold={1.4}
-          color="#f8fafc" // Polished white floor
-          metalness={0.2} // Subtle glossy reflections
+          color="#060b13" // Deep obsidian dark floor
+          metalness={0.9} // Extremely glossy/reflective
         />
       </mesh>
 
@@ -168,9 +263,9 @@ export default function ShowroomEnvironment({ introProgressRef, view }) {
         />
       </mesh>
 
-      {/* ── Enclosed Futuristic Curved Wall (Single digital panel wrapping 230 degrees) ── */}
+      {/* ── Enclosed Futuristic Curved Wall (Single digital panel wrapping 310 degrees) ── */}
       <mesh position={[0, wallY, 0]} receiveShadow>
-        <cylinderGeometry args={[8.0, 8.0, wallHeight, 64, 1, true, 2.705, 4.01]} />
+        <cylinderGeometry args={[8.0, 8.0, wallHeight, 64, 1, true, 2.006, 5.410]} />
         <shaderMaterial
           ref={(el) => { if (el) wallMaterialsRef.current.add(el) }}
           uniforms={{ 
@@ -184,52 +279,178 @@ export default function ShowroomEnvironment({ introProgressRef, view }) {
         />
       </mesh>
 
-      {/* ── Shelter Curved Ceiling/Roof (matching the 230-degree sector) ── */}
-      <mesh position={[0, ceilingY, 0]} rotation={[Math.PI / 2, 0, 0]} castShadow>
-        <circleGeometry args={[8.0, 64, 2.705, 4.01]} />
+      {/* ── Outer Shell Cylinder (Titanium space pod texture wrapping 310 degrees) ── */}
+      <mesh position={[0, wallY, 0]} receiveShadow>
+        <cylinderGeometry args={[8.08, 8.08, wallHeight, 64, 1, true, 2.006, 5.410]} />
         <meshStandardMaterial
-          color="#f8fafc" // White roof ceiling
-          metalness={0.1}
+          color="#0f172a" // Deep navy/carbon metal
+          metalness={0.85}
+          roughness={0.18}
+          side={THREE.BackSide} // Only visible from the outside
+        />
+      </mesh>
+
+      {/* ── Shelter Curved Ceiling/Roof (full 360-degree circle) ── */}
+      <mesh position={[0, ceilingY, 0]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+        <circleGeometry args={[8.0, 64]} />
+        <meshStandardMaterial
+          color="#0f172a" // Dark metallic ceiling
+          metalness={0.8}
           roughness={0.2}
           side={THREE.DoubleSide}
         />
       </mesh>
 
-      {/* ── Neon Border Framing Light Strips (Soft ice blue / white accents) ── */}
-      {/* Left Terminal Vertical strip */}
-      <mesh ref={leftStripRef} position={[-7.25, wallY, 3.38]}>
-        <planeGeometry args={[0.08, wallHeight]} />
-        <meshBasicMaterial 
-          color="#bae6fd" 
-          toneMapped={false} 
+      {/* ── Outer Ceiling Cap (full 360-degree circle) ── */}
+      <mesh position={[0, ceilingY + 0.02, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[8.08, 64]} />
+        <meshStandardMaterial
+          color="#1e293b"
+          metalness={0.8}
+          roughness={0.2}
         />
       </mesh>
 
-      {/* Right Terminal Vertical strip */}
-      <mesh ref={rightStripRef} position={[7.25, wallY, 3.38]}>
-        <planeGeometry args={[0.08, wallHeight]} />
-        <meshBasicMaterial 
-          color="#bae6fd" 
-          toneMapped={false} 
+      {/* ── Outer Floor Cap (full 360-degree circle) ── */}
+      <mesh position={[0, -tableHeight - 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[8.08, 64]} />
+        <meshStandardMaterial
+          color="#1e293b"
+          metalness={0.8}
+          roughness={0.2}
         />
       </mesh>
 
-      {/* Curved Top Neon Framing Ring */}
+      {/* ── Top Outer Glowing Neon Ring (full 360-degree ring) ── */}
+      <mesh position={[0, ceilingY + 0.01, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[8.08, 8.12, 64]} />
+        <meshBasicMaterial color="#22d3ee" toneMapped={false} side={THREE.DoubleSide} />
+      </mesh>
+
+      {/* ── Bottom Outer Glowing Neon Ring (full 360-degree ring) ── */}
+      <mesh position={[0, -tableHeight - 0.01, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[8.08, 8.12, 64]} />
+        <meshBasicMaterial color="#22d3ee" toneMapped={false} side={THREE.DoubleSide} />
+      </mesh>
+
+      {/* ── Solid 3D Metallic Door Frames / Jambs (bridges inner/outer shell gap) ── */}
+      {/* Left Frame Box */}
+      <mesh ref={leftStripRef} position={[-3.38, wallY, 7.25]}>
+        <boxGeometry args={[0.15, wallHeight, 0.12]} />
+        <meshStandardMaterial 
+          color="#1e293b" 
+          metalness={0.8}
+          roughness={0.2}
+        />
+      </mesh>
+
+      {/* Right Frame Box */}
+      <mesh ref={rightStripRef} position={[3.38, wallY, 7.25]}>
+        <boxGeometry args={[0.15, wallHeight, 0.12]} />
+        <meshStandardMaterial 
+          color="#1e293b" 
+          metalness={0.8}
+          roughness={0.2}
+        />
+      </mesh>
+
+      {/* Curved Top Neon Framing Ring (full 360-degree ring) ── */}
       <mesh position={[0, ceilingY - 0.02, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[7.96, 8.0, 64, 1, 2.705, 4.01]} />
+        <ringGeometry args={[7.96, 8.0, 64]} />
         <meshBasicMaterial 
-          color="#ffffff" 
+          color="#22d3ee" // Cyan glowing ring
           toneMapped={false} 
           side={THREE.DoubleSide}
         />
       </mesh>
 
-      {/* ── Product circle base (White Glass disc on the table - Scaled down to match phone) ── */}
+      {/* ── Automatic Sliding Store Doors at Z = 8.0 (Curved Doors) ── */}
+      {/* Left Sliding Door Group */}
+      <group ref={leftDoorRef} position={[0, 0, 0]}>
+        {/* Tinted glass pane */}
+        <mesh position={[0, wallY, 0]}>
+          <cylinderGeometry args={[8.04, 8.04, wallHeight, 32, 1, true, 1.57, 0.436]} />
+          <meshStandardMaterial
+            ref={leftDoorMatRef}
+            color="#0f172a"
+            emissive="#22d3ee"
+            emissiveIntensity={0.12}
+            roughness={0.15}
+            metalness={0.9}
+            transparent={true}
+            opacity={0.8}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
+        {/* Metal frame borders at the edges */}
+        {/* Right edge bar (at 90 degrees) */}
+        <mesh position={[0, wallY, 8.04]}>
+          <boxGeometry args={[0.1, wallHeight, 0.05]} />
+          <meshStandardMaterial color="#1e293b" metalness={0.85} roughness={0.2} />
+        </mesh>
+        {/* Left edge bar (at 115 degrees) */}
+        <mesh position={[-3.40, wallY, 7.29]} rotation={[0, 0.436, 0]}>
+          <boxGeometry args={[0.1, wallHeight, 0.05]} />
+          <meshStandardMaterial color="#1e293b" metalness={0.85} roughness={0.2} />
+        </mesh>
+        {/* Soft cyan edge glows */}
+        <mesh position={[0, wallY, 8.06]}>
+          <planeGeometry args={[0.02, wallHeight]} />
+          <meshBasicMaterial color="#22d3ee" toneMapped={false} />
+        </mesh>
+        <mesh position={[-3.42, wallY, 7.31]} rotation={[0, 0.436, 0]}>
+          <planeGeometry args={[0.02, wallHeight]} />
+          <meshBasicMaterial color="#22d3ee" toneMapped={false} />
+        </mesh>
+      </group>
+
+      {/* Right Sliding Door Group */}
+      <group ref={rightDoorRef} position={[0, 0, 0]}>
+        {/* Tinted glass pane */}
+        <mesh position={[0, wallY, 0]}>
+          <cylinderGeometry args={[8.04, 8.04, wallHeight, 32, 1, true, 1.134, 0.436]} />
+          <meshStandardMaterial
+            ref={rightDoorMatRef}
+            color="#0f172a"
+            emissive="#22d3ee"
+            emissiveIntensity={0.12}
+            roughness={0.15}
+            metalness={0.9}
+            transparent={true}
+            opacity={0.8}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
+        {/* Metal frame borders at the edges */}
+        {/* Left edge bar (at 90 degrees) */}
+        <mesh position={[0, wallY, 8.04]}>
+          <boxGeometry args={[0.1, wallHeight, 0.05]} />
+          <meshStandardMaterial color="#1e293b" metalness={0.85} roughness={0.2} />
+        </mesh>
+        {/* Right edge bar (at 65 degrees) */}
+        <mesh position={[3.40, wallY, 7.29]} rotation={[0, -0.436, 0]}>
+          <boxGeometry args={[0.1, wallHeight, 0.05]} />
+          <meshStandardMaterial color="#1e293b" metalness={0.85} roughness={0.2} />
+        </mesh>
+        {/* Soft cyan edge glows */}
+        <mesh position={[0, wallY, 8.06]}>
+          <planeGeometry args={[0.02, wallHeight]} />
+          <meshBasicMaterial color="#22d3ee" toneMapped={false} />
+        </mesh>
+        <mesh position={[3.42, wallY, 7.31]} rotation={[0, -0.436, 0]}>
+          <planeGeometry args={[0.02, wallHeight]} />
+          <meshBasicMaterial color="#22d3ee" toneMapped={false} />
+        </mesh>
+      </group>
+
+      {/* ── Product circle base (Cyan glowing glass disc on the table) ── */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.001, 0]}>
         <circleGeometry args={[2.0, 128]} />
         <meshStandardMaterial 
-          color="#f8fafc" 
-          metalness={0.3} 
+          color="#0f172a" 
+          emissive="#22d3ee"
+          emissiveIntensity={0.35}
+          metalness={0.9} 
           roughness={0.05} 
         />
       </mesh>
