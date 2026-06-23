@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Canvas } from '@react-three/fiber'
-import { Stars, Sparkles, useGLTF } from '@react-three/drei'
+import { Canvas, useFrame } from '@react-three/fiber'
+import { Sparkles, useGLTF } from '@react-three/drei'
 import ShowroomCamera from './canvas/ShowroomCamera'
 import ShowroomEnvironment from './canvas/ShowroomEnvironment'
 import * as THREE from 'three'
@@ -10,25 +10,87 @@ import gsap from 'gsap'
 useGLTF.preload('/models/tabel.glb')
 useGLTF.preload('/models/samsung_s23_ultra_free.glb')
 
-// ─── Showcase angle spec sequence ─────────────────────────────────────────────
-const ANGLE_LABELS = [
-  { title: 'Front View',              sub: 'Quad-camera array · Gorilla Glass Victus+' },
-  { title: 'Three-Quarter View',      sub: 'Titanium frame · Aerospace-grade alloy' },
-  { title: 'Side Profile',            sub: '8.9 mm ultra-slim · IP68 rated' },
-  { title: 'Aerial Detail',           sub: '200 MP main sensor · OIS stabilisation' },
-  { title: 'Rear Three-Quarter',      sub: 'S Pen slot · Symmetrical ergonomics' },
-  { title: 'Low-Angle Dramatic',      sub: 'AMOLED 6.8″ · 1–120 Hz adaptive refresh' },
-]
+// ─── Custom Space Background (Static 3D Star Field + Sparkles Fades) ──────────
+function SpaceBackground({ introProgressRef, view }) {
+  const groupRef = useRef()
+  const numStars = 2000
+  const positions = useRef(null)
+
+  if (!positions.current) {
+    const pos = new Float32Array(numStars * 3)
+    for (let i = 0; i < numStars; i++) {
+      // Distribute stars in a 3D corridor along the camera flight path (Z: -20 to 100)
+      pos[i * 3]     = (Math.random() - 0.5) * 55 // X
+      pos[i * 3 + 1] = (Math.random() - 0.5) * 55 // Y
+      pos[i * 3 + 2] = Math.random() * 120 - 20   // Z
+    }
+    positions.current = pos
+  }
+
+  useFrame(() => {
+    let spaceFade = 1.0
+
+    if (view === 'guided-intro' && introProgressRef.current !== undefined) {
+      const t = introProgressRef.current
+      if (t > 0.75) {
+        spaceFade = 1.0 - (t - 0.75) / 0.25
+      } else {
+        spaceFade = 1.0
+      }
+    } else if (view === 'showroom') {
+      spaceFade = 0.0
+    }
+
+    if (groupRef.current) {
+      groupRef.current.traverse((child) => {
+        if (child.isPoints && child.material) {
+          if (child.userData.baseOpacity === undefined) {
+            child.userData.baseOpacity = child.material.opacity || 1.0
+          }
+          child.material.opacity = child.userData.baseOpacity * spaceFade
+          child.visible = spaceFade > 0.001
+        }
+      })
+    }
+  })
+
+  return (
+    <group ref={groupRef}>
+      <points>
+        <bufferGeometry>
+          <bufferAttribute
+            attach="attributes-position"
+            args={[positions.current, 3]}
+          />
+        </bufferGeometry>
+        <pointsMaterial
+          size={0.14}
+          color="#ffffff"
+          sizeAttenuation={true}
+          transparent={true}
+          opacity={0.8}
+          depthWrite={false}
+        />
+      </points>
+      <Sparkles count={120} scale={14} size={2.5} speed={0.2}  color="#ffffff" opacity={0.6} />
+      <Sparkles count={70}  scale={18} size={3.5} speed={0.15} color="#22d3ee" opacity={0.4} />
+      <Sparkles count={40}  scale={12} size={2.0} speed={0.1}  color="#a855f7" opacity={0.28} />
+    </group>
+  )
+}
 
 // ─── Phone 3D component ────────────────────────────────────────────────────────
-function PhoneOnTable({ revealed }) {
+function PhoneOnTable() {
   const { scene } = useGLTF('/models/samsung_s23_ultra_free.glb')
   const groupRef  = useRef()
-  const tweenRef  = useRef(null)
+  
+  // Cache cloned materials to modify their opacity
+  const materialsRef = useRef([])
 
   useEffect(() => {
     if (!scene) return
 
+    const mats = []
     scene.traverse((child) => {
       if (child.isMesh) {
         child.castShadow    = true
@@ -37,22 +99,26 @@ function PhoneOnTable({ revealed }) {
           child.material = child.material.clone()
           child.material.roughness       = Math.max(child.material.roughness * 0.55, 0.06)
           child.material.metalness       = Math.min(child.material.metalness * 1.3, 1.0)
-          child.material.envMapIntensity = 3.5
-          // Slight emissive so phone glows and doesn't look dull
-          child.material.emissive        = new THREE.Color('#111822')
-          child.material.emissiveIntensity = 0.4
-          child.material.needsUpdate     = true
+          child.material.envMapIntensity = 4.0 // Premium specular highlights
+          child.material.emissive        = new THREE.Color('#030508')
+          child.material.emissiveIntensity = 0.1
+          
+          child.material.transparent = false
+          child.material.opacity = 1.0
+          
+          mats.push(child.material)
         }
       }
     })
+    materialsRef.current = mats
 
-    // Normalise: 0.52 units tall
+    // Normalise: 0.38 units tall (fits elegantly in the larger showroom scale)
     const box = new THREE.Box3().setFromObject(scene)
     const sz  = new THREE.Vector3()
     box.getSize(sz)
     const maxDim = Math.max(sz.x, sz.y, sz.z)
     if (maxDim > 0) {
-      const s = 0.52 / maxDim
+      const s = 0.38 / maxDim
       scene.scale.set(s, s, s)
     }
 
@@ -63,25 +129,6 @@ function PhoneOnTable({ revealed }) {
     scene.position.set(-c.x, -lb.min.y, -c.z)
   }, [scene])
 
-  useEffect(() => {
-    if (!groupRef.current) return
-    if (tweenRef.current) tweenRef.current.kill()
-
-    if (revealed) {
-      gsap.set(groupRef.current.scale, { x: 0, y: 0, z: 0 })
-      tweenRef.current = gsap.to(groupRef.current.scale, {
-        x: 1, y: 1, z: 1,
-        duration: 0.45,
-        ease: 'power2.out',
-        delay: 0.1,
-      })
-    } else {
-      gsap.set(groupRef.current.scale, { x: 0, y: 0, z: 0 })
-    }
-
-    return () => { if (tweenRef.current) tweenRef.current.kill() }
-  }, [revealed])
-
   return (
     <group ref={groupRef} position={[0, 0, 0]} rotation={[0, Math.PI * 0.15, 0]}>
       <primitive object={scene} />
@@ -90,33 +137,80 @@ function PhoneOnTable({ revealed }) {
 }
 
 // ─── Studio lighting ──────────────────────────────────────────────────────────
-function ShowroomLighting({ revealed }) {
-  return revealed ? (
+function ShowroomLighting() {
+  const keyLight = useRef()
+  const leftFillLight = useRef()
+  const rightFillLight = useRef()
+  const rimLight = useRef()
+  const underGlow = useRef()
+  const ambientLightRef = useRef()
+  const spotLightRef = useRef()
+  const wallGlowLightRef = useRef()
+
+  useFrame(() => {
+    const fade = 1.0
+    
+    if (keyLight.current) keyLight.current.intensity = 3.2 * fade
+    if (leftFillLight.current) leftFillLight.current.intensity = 2.5 * fade
+    if (rightFillLight.current) rightFillLight.current.intensity = 2.5 * fade
+    if (rimLight.current) rimLight.current.intensity = 2.8 * fade
+    if (underGlow.current) underGlow.current.intensity = 4.5 * fade
+    if (ambientLightRef.current) ambientLightRef.current.intensity = 0.1 + 0.25 * fade
+    if (spotLightRef.current) spotLightRef.current.intensity = 12.0 * fade
+    if (wallGlowLightRef.current) wallGlowLightRef.current.intensity = 2.5 * fade
+  })
+
+  return (
     <group>
-      {/* Key light — warm, high left */}
+      {/* Key light — premium front-top right */}
       <directionalLight
-        position={[-2.5, 6, 3]} intensity={2.2} castShadow
-        shadow-mapSize-width={2048} shadow-mapSize-height={2048}
+        ref={keyLight}
+        position={[0.5, 3.5, 2.5]} 
+        intensity={0} 
+        castShadow
+        shadow-mapSize-width={2048} 
+        shadow-mapSize-height={2048}
         shadow-camera-far={20}
-        shadow-camera-left={-3} shadow-camera-right={3}
-        shadow-camera-top={3}  shadow-camera-bottom={-3}
+        shadow-camera-left={-3} 
+        shadow-camera-right={3}
+        shadow-camera-top={3}  
+        shadow-camera-bottom={-3}
         shadow-bias={-0.0002}
       />
-      {/* Cool fill — right */}
-      <pointLight position={[3, 3, -1]} color="#ffffff" intensity={3.5} distance={12} decay={1.8} />
+      {/* Left fill point light */}
+      <pointLight ref={leftFillLight} position={[-3, 2, 1]} color="#ffffff" intensity={0} distance={12} decay={1.8} />
+      {/* Right fill point light */}
+      <pointLight ref={rightFillLight} position={[3, 2, 1]} color="#ffffff" intensity={0} distance={12} decay={1.8} />
+      {/* Rim light behind phone */}
+      <directionalLight ref={rimLight} position={[0, 3, -3]} intensity={0} />
+      
       {/* Under-glow from platform */}
-      <pointLight position={[0, 0.08, 0]} color="#ffffff" intensity={4.5} distance={2.2} decay={2} />
+      <pointLight ref={underGlow} position={[0, 0.08, 0]} color="#ffffff" intensity={0} distance={2.2} decay={2} />
+      
       {/* Soft ambient */}
-      <ambientLight intensity={0.35} color="#ffffff" />
+      <ambientLight ref={ambientLightRef} intensity={0.1} color="#ffffff" />
+      
       {/* Top spot on phone */}
       <spotLight
+        ref={spotLightRef}
         position={[0, 5, 0.8]}
-        intensity={12} angle={Math.PI / 9}
-        penumbra={0.7} castShadow color="#ffffff"
+        intensity={0} 
+        angle={Math.PI / 9}
+        penumbra={0.7} 
+        castShadow 
+        color="#ffffff"
+      />
+
+      {/* Soft Ambient Wall Glow Light Wash (Soft Ice Blue) */}
+      <pointLight
+        ref={wallGlowLightRef}
+        position={[0, 3.3, -4.0]}
+        color="#e0f2fe"
+        intensity={0}
+        distance={6.0}
+        decay={1.8}
       />
     </group>
-  ) : (
-    <ambientLight intensity={0.1} />
   )
 }
 
@@ -124,6 +218,7 @@ function ShowroomLighting({ revealed }) {
 export default function ProductShowroom({ view, onIntroComplete }) {
   const [showroomRevealed, setShowroomRevealed] = useState(false)
   const [buttonsVisible, setButtonsVisible] = useState(false)
+  const introProgressRef = useRef(0)
 
   useEffect(() => {
     if (view === 'showroom') {
@@ -136,6 +231,10 @@ export default function ProductShowroom({ view, onIntroComplete }) {
     }
   }, [view])
 
+  const handleProgressUpdate = useCallback((t) => {
+    introProgressRef.current = t
+  }, [])
+
   return (
     <div className="absolute inset-0 w-full h-full z-20 pointer-events-none">
 
@@ -147,16 +246,13 @@ export default function ProductShowroom({ view, onIntroComplete }) {
           gl={{ alpha: true, antialias: true, powerPreference: 'high-performance' }}
           style={{ background: 'transparent' }}
         >
-          {/* Space background */}
-          <Stars radius={40} depth={60} count={2500} factor={8} saturation={0.15} fade speed={0.8} />
-          <Sparkles count={120} scale={14} size={2.5} speed={0.2}  color="#ffffff" opacity={0.6} />
-          <Sparkles count={70}  scale={18} size={3.5} speed={0.15} color="#22d3ee" opacity={0.4} />
-          <Sparkles count={40}  scale={12} size={2.0} speed={0.1}  color="#a855f7" opacity={0.28} />
+          {/* Space background (stars fade out during transition) */}
+          <SpaceBackground introProgressRef={introProgressRef} view={view} />
 
-          <ShowroomLighting   revealed={showroomRevealed} />
-          <ShowroomEnvironment revealed={showroomRevealed} />
-          <PhoneOnTable       revealed={showroomRevealed} />
-          <ShowroomCamera     view={view} onIntroComplete={onIntroComplete} />
+          <ShowroomLighting />
+          <ShowroomEnvironment revealed={showroomRevealed} introProgressRef={introProgressRef} view={view} />
+          <PhoneOnTable />
+          <ShowroomCamera     view={view} onIntroComplete={onIntroComplete} onProgressUpdate={handleProgressUpdate} />
         </Canvas>
       </div>
 
@@ -226,3 +322,4 @@ export default function ProductShowroom({ view, onIntroComplete }) {
     </div>
   )
 }
+

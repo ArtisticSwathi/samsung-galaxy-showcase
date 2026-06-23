@@ -1,5 +1,5 @@
 import { useThree, useFrame } from '@react-three/fiber'
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef } from 'react'
 import gsap from 'gsap'
 import * as THREE from 'three'
 
@@ -7,137 +7,94 @@ import * as THREE from 'three'
 const REVEAL_POS  = new THREE.Vector3(0, 0.32, 1.2)
 const REVEAL_LOOK = new THREE.Vector3(0, 0.16, 0)
 
-// ── Showcase angles — silky cinematic transitions (1.5s each) ───────────────
-const SHOWCASE = [
-  { pos: [0,      0.32,  1.20],  look: [0,  0.16, 0],  dur: 1.0, hold: 0.5 }, // Front
-  { pos: [0.85,   0.40,  0.85],  look: [0,  0.12, 0],  dur: 1.0, hold: 0.5 }, // 3/4 Right
-  { pos: [1.30,   0.18,  0.05],  look: [0,  0.16, 0],  dur: 1.0, hold: 0.5 }, // Side
-  { pos: [0.10,   0.95,  0.50],  look: [0,  0.26, 0],  dur: 1.0, hold: 0.5 }, // Aerial
-  { pos: [-0.85,  0.36,  0.90],  look: [0,  0.14, 0],  dur: 1.0, hold: 0.5 }, // 3/4 Left
-  { pos: [0,      0.04,  1.15],  look: [0,  0.26, 0],  dur: 1.0, hold: 0.5 }, // Low angle
-]
-
-export default function ShowroomCamera({ view, onIntroComplete }) {
+export default function ShowroomCamera({ view, onIntroComplete, onProgressUpdate }) {
   const { camera } = useThree()
-  const lookTarget  = useRef(new THREE.Vector3(0.1, 1.0, 6.0))
+  const lookTarget  = useRef(new THREE.Vector3(0, 0.16, 75.0))
   const flightRef   = useRef(null)
-  const showcaseRef = useRef(null)
-  const kfIndexRef  = useRef(0)
 
-  // ── Spline flight path through space ──────────────────────────────────────
+  // ── Spline flight path through space (Straight forward with subtle banking) ──
   const positionCurve = useRef(new THREE.CatmullRomCurve3([
-    new THREE.Vector3(0,   10.0, 15.0),
-    new THREE.Vector3(0.4,  7.2, 11.0),
-    new THREE.Vector3(1.0,  4.5,  7.5),
-    new THREE.Vector3(1.5,  2.2,  4.0),
-    new THREE.Vector3(1.2,  1.0,  2.2),
-    new THREE.Vector3(0.6,  0.5,  1.6),
+    new THREE.Vector3(0,    0.36, 95.0),
+    new THREE.Vector3(0.15, 0.35, 70.0),
+    new THREE.Vector3(-0.1, 0.34, 45.0),
+    new THREE.Vector3(0.05, 0.33, 20.0),
+    new THREE.Vector3(0,    0.32, 1.2), // End exactly at REVEAL_POS
   ]))
 
   const targetCurve = useRef(new THREE.CatmullRomCurve3([
-    new THREE.Vector3(0.1,  7.5, 10.0),
-    new THREE.Vector3(0.5,  5.2,  7.5),
-    new THREE.Vector3(0.9,  3.0,  4.5),
-    new THREE.Vector3(0.8,  1.2,  1.5),
-    new THREE.Vector3(0.3,  0.4,  0.3),
-    new THREE.Vector3(0.0,  0.2, -0.2),
+    new THREE.Vector3(0,    0.16, 75.0),
+    new THREE.Vector3(0.15, 0.16, 50.0),
+    new THREE.Vector3(-0.1, 0.16, 25.0),
+    new THREE.Vector3(0.05, 0.16, 5.0),
+    new THREE.Vector3(0,    0.16, 0),   // End exactly at REVEAL_LOOK
   ]))
-
-  // ── Showcase loop — fires each angle every ~1 second ──────────────────────
-  const startShowcase = useCallback(() => {
-    kfIndexRef.current = 0
-
-    function playNext() {
-      const kf = SHOWCASE[kfIndexRef.current % SHOWCASE.length]
-      kfIndexRef.current++
-
-      if (showcaseRef.current) showcaseRef.current.kill()
-
-      const tl = gsap.timeline({ onComplete: playNext })
-      showcaseRef.current = tl
-
-      // Move camera and look-target simultaneously
-      tl.to(camera.position, {
-        x: kf.pos[0], y: kf.pos[1], z: kf.pos[2],
-        duration: kf.dur,
-        ease: 'power3.inOut',   // silky acceleration + decel
-      })
-      tl.to(lookTarget.current, {
-        x: kf.look[0], y: kf.look[1], z: kf.look[2],
-        duration: kf.dur,
-        ease: 'power3.inOut',
-      }, '<')
-      tl.to({}, { duration: kf.hold })  // brief hold at this angle
-    }
-
-    playNext()
-  }, [camera])
 
   // ── View effect ────────────────────────────────────────────────────────────
   useEffect(() => {
-
     if (view === 'guided-intro') {
       // Kill any previous animations
-      if (showcaseRef.current) { showcaseRef.current.kill(); showcaseRef.current = null }
-      if (flightRef.current)   { flightRef.current.kill();   flightRef.current   = null }
+      if (flightRef.current) { flightRef.current.kill(); flightRef.current = null }
 
       const progress = { value: 0 }
 
       // Snap to spline start — prevents any jump artefact
-      positionCurve.current.getPoint(0, camera.position)
-      targetCurve.current.getPoint(0, lookTarget.current)
+      positionCurve.current.getPointAt(0, camera.position)
+      targetCurve.current.getPointAt(0, lookTarget.current)
       camera.lookAt(lookTarget.current)
 
-      // Phase 1 — 3-second fast constant jet flight
+      // Single uninterrupted 4.0s GSAP timeline
       flightRef.current = gsap.to(progress, {
-        value: 1,
-        duration: 3.0,
-        ease: 'none',   // constant high speed throughout the flight
+        value: 1.0,
+        duration: 4.0,
+        ease: 'none', // linear interpolation of parameter t, easedT is piecewise below
         onUpdate: () => {
-          positionCurve.current.getPoint(progress.value, camera.position)
-          targetCurve.current.getPoint(progress.value, lookTarget.current)
+          const t = progress.value
+          let easedT
+          if (t <= 0.75) {
+            // Constant speed from 0.0s to 3.0s (t = 0 to 0.75)
+            easedT = (8 / 7) * t
+          } else {
+            // Smooth quadratic deceleration from 3.0s to 4.0s (t = 0.75 to 1.0)
+            easedT = (-16 / 7) * Math.pow(t - 1.0, 2) + 1.0
+          }
+
+          // Evaluate positions using arc length parameterization to ensure constant velocity
+          positionCurve.current.getPointAt(easedT, camera.position)
+          targetCurve.current.getPointAt(easedT, lookTarget.current)
+
+          if (onProgressUpdate) {
+            onProgressUpdate(t)
+          }
         },
         onComplete: () => {
-          // Phase 2 — 1-second smooth deceleration glide into reveal position (during the 4th second)
-          const decelTl = gsap.timeline()
-          decelTl.to(camera.position, {
-            x: REVEAL_POS.x, y: REVEAL_POS.y, z: REVEAL_POS.z,
-            duration: 1.0,
-            ease: 'power3.out',   // heavy decel — feels like braking
-          })
-          decelTl.to(lookTarget.current, {
-            x: REVEAL_LOOK.x, y: REVEAL_LOOK.y, z: REVEAL_LOOK.z,
-            duration: 1.0,
-            ease: 'power3.out',
-          }, '<')
-          decelTl.call(() => {
-            // Lock to exact values (no float drift)
-            camera.position.copy(REVEAL_POS)
-            lookTarget.current.copy(REVEAL_LOOK)
-            camera.lookAt(lookTarget.current)
-            // Switch view → models appear → showcase starts immediately
-            if (onIntroComplete) onIntroComplete()
-          })
+          // Lock to exact values on completion
+          camera.position.copy(REVEAL_POS)
+          lookTarget.current.copy(REVEAL_LOOK)
+          camera.lookAt(lookTarget.current)
+
+          if (onProgressUpdate) {
+            onProgressUpdate(1.0)
+          }
+
+          if (onIntroComplete) {
+            onIntroComplete()
+          }
         },
       })
 
     } else if (view === 'showroom') {
       if (flightRef.current) { flightRef.current.kill(); flightRef.current = null }
 
-      // Set camera to reveal position instantly (e.g. if user skipped intro)
+      // Set camera to reveal position instantly and keep static
       camera.position.copy(REVEAL_POS)
       lookTarget.current.copy(REVEAL_LOOK)
       camera.lookAt(lookTarget.current)
-
-      // Start showcase immediately — no delay
-      startShowcase()
     }
 
     return () => {
-      if (flightRef.current)   flightRef.current.kill()
-      if (showcaseRef.current) showcaseRef.current.kill()
+      if (flightRef.current) flightRef.current.kill()
     }
-  }, [view, camera, onIntroComplete, startShowcase])
+  }, [view, camera, onIntroComplete, onProgressUpdate])
 
   // Every frame: enforce live lookAt
   useFrame(() => {
@@ -146,3 +103,4 @@ export default function ShowroomCamera({ view, onIntroComplete }) {
 
   return null
 }
+
