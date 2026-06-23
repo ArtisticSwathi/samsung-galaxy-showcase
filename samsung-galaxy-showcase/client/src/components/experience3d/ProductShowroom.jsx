@@ -19,28 +19,21 @@ function SpaceBackground({ introProgressRef, view }) {
   if (!positions.current) {
     const pos = new Float32Array(numStars * 3)
     for (let i = 0; i < numStars; i++) {
-      // Distribute stars in a 3D corridor along the camera flight path (Z: -20 to 100)
-      pos[i * 3]     = (Math.random() - 0.5) * 55 // X
-      pos[i * 3 + 1] = (Math.random() - 0.5) * 55 // Y
-      pos[i * 3 + 2] = Math.random() * 120 - 20   // Z
+      pos[i * 3]     = (Math.random() - 0.5) * 55
+      pos[i * 3 + 1] = (Math.random() - 0.5) * 55
+      pos[i * 3 + 2] = Math.random() * 120 - 20
     }
     positions.current = pos
   }
 
   useFrame(() => {
     let spaceFade = 1.0
-
     if (view === 'guided-intro' && introProgressRef.current !== undefined) {
       const p = introProgressRef.current
-      if (p > 0.76) {
-        spaceFade = 1.0 - (p - 0.76) / 0.24
-      } else {
-        spaceFade = 1.0
-      }
+      spaceFade = p > 0.76 ? 1.0 - (p - 0.76) / 0.24 : 1.0
     } else if (view === 'showroom') {
       spaceFade = 0.0
     }
-
     if (groupRef.current) {
       groupRef.current.traverse((child) => {
         if (child.isPoints && child.material) {
@@ -58,19 +51,9 @@ function SpaceBackground({ introProgressRef, view }) {
     <group ref={groupRef}>
       <points>
         <bufferGeometry>
-          <bufferAttribute
-            attach="attributes-position"
-            args={[positions.current, 3]}
-          />
+          <bufferAttribute attach="attributes-position" args={[positions.current, 3]} />
         </bufferGeometry>
-        <pointsMaterial
-          size={0.14}
-          color="#ffffff"
-          sizeAttenuation={true}
-          transparent={true}
-          opacity={0.8}
-          depthWrite={false}
-        />
+        <pointsMaterial size={0.14} color="#ffffff" sizeAttenuation transparent opacity={0.8} depthWrite={false} />
       </points>
       <Sparkles count={120} scale={14} size={2.5} speed={0.2}  color="#ffffff" opacity={0.6} />
       <Sparkles count={70}  scale={18} size={3.5} speed={0.15} color="#22d3ee" opacity={0.4} />
@@ -83,8 +66,6 @@ function SpaceBackground({ introProgressRef, view }) {
 function PhoneOnTable({ introProgressRef, view }) {
   const { scene } = useGLTF('/models/samsung_s23_ultra_free.glb')
   const groupRef  = useRef()
-  
-  // Cache cloned materials to modify their opacity
   const materialsRef = useRef([])
 
   useEffect(() => {
@@ -97,22 +78,24 @@ function PhoneOnTable({ introProgressRef, view }) {
         child.receiveShadow = true
         if (child.material) {
           child.material = child.material.clone()
-          child.material.roughness       = Math.max(child.material.roughness * 0.55, 0.06)
-          child.material.metalness       = Math.min(child.material.metalness * 1.3, 1.0)
-          child.material.envMapIntensity = 4.0 // Premium specular highlights
-          child.material.emissive        = new THREE.Color('#030508')
-          child.material.emissiveIntensity = 0.1
-          
+          // Moderate roughness/metalness — looks premium without over-reflecting
+          child.material.roughness         = Math.max(child.material.roughness * 0.5, 0.05)
+          child.material.metalness         = Math.min(child.material.metalness * 1.2, 1.0)
+          // Lower envMapIntensity — no HDRI loaded so keep it subtle
+          child.material.envMapIntensity   = 1.5
+          // Very faint self-emissive so unlit areas are not pure black
+          child.material.emissive          = new THREE.Color('#050c18')
+          child.material.emissiveIntensity = 0.12
+
           child.material.transparent = true
           child.material.opacity = 0.0
-          
           mats.push(child.material)
         }
       }
     })
     materialsRef.current = mats
 
-    // Normalise: 0.38 units tall (fits elegantly in the larger showroom scale)
+    // Phone tall dimension → 0.38 units
     const box = new THREE.Box3().setFromObject(scene)
     const sz  = new THREE.Vector3()
     box.getSize(sz)
@@ -133,16 +116,10 @@ function PhoneOnTable({ introProgressRef, view }) {
     let fade = 0.0
     if (view === 'guided-intro' && introProgressRef.current !== undefined) {
       const p = introProgressRef.current
-      if (p > 0.80) {
-        // Fade in from p = 0.80 (4.0s) to p = 1.0 (5.0s)
-        fade = (p - 0.80) / 0.20
-      } else {
-        fade = 0.0
-      }
+      fade = p > 0.80 ? (p - 0.80) / 0.20 : 0.0
     } else if (view === 'showroom') {
       fade = 1.0
     }
-
     materialsRef.current.forEach((mat) => {
       if (mat) {
         mat.opacity = fade
@@ -158,97 +135,64 @@ function PhoneOnTable({ introProgressRef, view }) {
   )
 }
 
-// ─── Studio lighting ──────────────────────────────────────────────────────────
+// ─── Product Lighting ─────────────────────────────────────────────────────────
+//
+// Strategy: cluster multiple low-range point lights very close to the phone.
+// Point lights with a short "distance" physically cannot reach the walls or
+// background — their intensity falls off to zero within that radius.
+// This means ONLY the phone (and table surface directly below) gets lit.
+// None of these lights have visible geometry — they are invisible in camera.
+//
 function ShowroomLighting() {
-  const keyLight = useRef()
-  const leftFillLight = useRef()
-  const rightFillLight = useRef()
-  const rimLight = useRef()
-  const underGlow = useRef()
-  const ambientLightRef = useRef()
-  const spotLightRef = useRef()
-  const wallGlowLightRef = useRef()
-
-  useFrame(() => {
-    const fade = 1.0
-    
-    if (keyLight.current) keyLight.current.intensity = 1.8 * fade
-    if (leftFillLight.current) leftFillLight.current.intensity = 1.2 * fade
-    if (rightFillLight.current) rightFillLight.current.intensity = 1.2 * fade
-    if (rimLight.current) rimLight.current.intensity = 1.5 * fade
-    if (underGlow.current) underGlow.current.intensity = 2.2 * fade
-    if (ambientLightRef.current) ambientLightRef.current.intensity = 0.1 + 0.15 * fade
-    if (spotLightRef.current) spotLightRef.current.intensity = 6.0 * fade
-    if (wallGlowLightRef.current) wallGlowLightRef.current.intensity = 1.2 * fade
-  })
-
   return (
     <group>
-      {/* Key light — premium front-top right */}
-      <directionalLight
-        ref={keyLight}
-        position={[0.5, 3.5, 2.5]} 
-        intensity={0} 
-        castShadow
-        shadow-mapSize-width={2048} 
-        shadow-mapSize-height={2048}
-        shadow-camera-far={20}
-        shadow-camera-left={-3} 
-        shadow-camera-right={3}
-        shadow-camera-top={3}  
-        shadow-camera-bottom={-3}
-        shadow-bias={-0.0002}
-      />
-      {/* Left fill point light */}
-      <pointLight ref={leftFillLight} position={[-3, 2, 1]} color="#ffffff" intensity={0} distance={12} decay={1.8} />
-      {/* Right fill point light */}
-      <pointLight ref={rightFillLight} position={[3, 2, 1]} color="#ffffff" intensity={0} distance={12} decay={1.8} />
-      {/* Rim light behind phone */}
-      <directionalLight ref={rimLight} position={[0, 3, -3]} intensity={0} />
-      
-      {/* Under-glow from platform */}
-      <pointLight ref={underGlow} position={[0, 0.08, 0]} color="#ffffff" intensity={0} distance={2.2} decay={2} />
-      
-      {/* Soft ambient */}
-      <ambientLight ref={ambientLightRef} intensity={0.1} color="#ffffff" />
-      
-      {/* Top spot on phone */}
-      <spotLight
-        ref={spotLightRef}
-        position={[0, 5, 0.8]}
-        intensity={0} 
-        angle={Math.PI / 9}
-        penumbra={0.7} 
-        castShadow 
-        color="#ffffff"
-      />
+      {/* Very dim scene ambient — just enough to see the showroom walls faintly */}
+      <ambientLight intensity={0.08} color="#b0c8e8" />
 
-      {/* Soft Ambient Wall Glow Light Wash (Soft Ice Blue) */}
-      <pointLight
-        ref={wallGlowLightRef}
-        position={[0, 3.3, -4.0]}
-        color="#e0f2fe"
-        intensity={0}
-        distance={6.0}
-        decay={1.8}
-      />
+      {/* ── Phone-local lights — distance ≤ 1.0 keeps them on the phone only ── */}
+
+      {/* TOP KEY: overhead, casts down across the whole front face */}
+      <pointLight position={[0,    0.95, 0.25]} color="#ffffff" intensity={14} distance={1.1} decay={2} />
+
+      {/* FRONT FILL: in front of phone, softly illuminates the display */}
+      <pointLight position={[0,    0.28, 0.50]} color="#e8f2ff" intensity={10} distance={0.9} decay={2} />
+
+      {/* LEFT FILL: 45° left — reveals left edge and frame */}
+      <pointLight position={[-0.40, 0.30, 0.30]} color="#d8ecff" intensity={8}  distance={0.85} decay={2} />
+
+      {/* RIGHT FILL: 45° right — reveals right edge and frame */}
+      <pointLight position={[0.40,  0.30, 0.30]} color="#d8ecff" intensity={8}  distance={0.85} decay={2} />
+
+      {/* REAR RIM: behind phone — defines silhouette, illuminates rear cameras */}
+      <pointLight position={[0,    0.30, -0.50]} color="#99c8ff" intensity={10} distance={0.95} decay={2} />
+
+      {/* REAR-LEFT rim for back panel detail */}
+      <pointLight position={[-0.35, 0.28, -0.40]} color="#88b8ff" intensity={6}  distance={0.8} decay={2} />
+
+      {/* REAR-RIGHT rim for back panel detail */}
+      <pointLight position={[0.35,  0.28, -0.40]} color="#88b8ff" intensity={6}  distance={0.8} decay={2} />
+
+      {/* SIDE-LEFT: grazes the left profile */}
+      <pointLight position={[-0.50, 0.25, 0]}    color="#cce4ff" intensity={7}  distance={0.85} decay={2} />
+
+      {/* SIDE-RIGHT: grazes the right profile */}
+      <pointLight position={[0.50,  0.25, 0]}    color="#cce4ff" intensity={7}  distance={0.85} decay={2} />
+
+      {/* UNDER-GLOW: cyan rising from platform — only reaches bottom of phone */}
+      <pointLight position={[0,    0.04, 0]}    color="#22d3ee" intensity={5}  distance={0.55} decay={2} />
     </group>
   )
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function ProductShowroom({ view, onIntroComplete }) {
-  const [showroomRevealed, setShowroomRevealed] = useState(false)
   const [buttonsVisible, setButtonsVisible] = useState(false)
   const introProgressRef = useRef(0)
 
   useEffect(() => {
     if (view === 'showroom') {
-      setShowroomRevealed(true)
-      // Buttons fade in shortly after models appear
       setTimeout(() => setButtonsVisible(true), 600)
     } else {
-      setShowroomRevealed(false)
       setButtonsVisible(false)
     }
   }, [view])
@@ -268,7 +212,7 @@ export default function ProductShowroom({ view, onIntroComplete }) {
           gl={{ alpha: true, antialias: true, powerPreference: 'high-performance' }}
           style={{ background: 'transparent' }}
         >
-          {/* Space background (stars fade out during transition) */}
+          {/* Space background */}
           <SpaceBackground introProgressRef={introProgressRef} view={view} />
 
           <ShowroomLighting />
@@ -344,4 +288,3 @@ export default function ProductShowroom({ view, onIntroComplete }) {
     </div>
   )
 }
-

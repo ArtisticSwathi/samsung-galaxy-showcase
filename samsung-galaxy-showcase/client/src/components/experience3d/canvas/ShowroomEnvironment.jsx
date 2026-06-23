@@ -84,7 +84,7 @@ export default function ShowroomEnvironment({ introProgressRef, view }) {
   const wallY = -tableHeight + wallHeight / 2
   const ceilingY = -tableHeight + wallHeight
 
-  // White futuristic emissive materials on the table GLB
+  // Premium dark metallic table material
   useEffect(() => {
     if (!scene) return
 
@@ -94,24 +94,26 @@ export default function ShowroomEnvironment({ introProgressRef, view }) {
         child.receiveShadow = true
         if (child.material) {
           child.material = child.material.clone()
-          child.material.color             = new THREE.Color('#eef5ff')
-          child.material.metalness         = 0.5
-          child.material.roughness         = 0.1
-          child.material.emissiveIntensity = 0.1
+          // Dark premium charcoal metal — does NOT fight with the phone for attention
+          child.material.color             = new THREE.Color('#1a2235')
+          child.material.metalness         = 0.85
+          child.material.roughness         = 0.12
+          child.material.emissive          = new THREE.Color('#06111f')
+          child.material.emissiveIntensity = 0.15
           child.material.transparent = false
           child.material.opacity = 1.0
         }
       }
     })
 
-    // Bounding scale table model
+    // Scale table to 1.6 units max dimension — proportional pedestal for the phone
     const box = new THREE.Box3().setFromObject(scene)
     const sz  = new THREE.Vector3()
     box.getSize(sz)
     const maxDim = Math.max(sz.x, sz.y, sz.z)
     
     if (maxDim > 0) {
-      scene.scale.set(4.8 / maxDim, 4.8 / maxDim, 4.8 / maxDim)
+      scene.scale.set(2.2 / maxDim, 2.2 / maxDim, 2.2 / maxDim)
     }
 
     // Top of table at y = 0
@@ -252,14 +254,14 @@ export default function ShowroomEnvironment({ introProgressRef, view }) {
         />
       </mesh>
 
-      {/* ── Pedestal Stage Base (sitting on floor - Expanded White/Silver Theme) ── */}
+      {/* ── Pedestal Stage Base (dark premium metal disc) ── */}
       <mesh position={[0, -tableHeight + 0.02, 0]} receiveShadow castShadow>
-        <cylinderGeometry args={[3.0, 3.0, 0.04, 64]} />
+        <cylinderGeometry args={[1.2, 1.2, 0.04, 64]} />
         <meshStandardMaterial
-          color="#e2e8f0" // Soft white/grey pedestal
-          metalness={0.25}
-          roughness={0.12}
-          envMapIntensity={1.5}
+          color="#0d1520"  // Deep dark navy — premium product stage
+          metalness={0.9}
+          roughness={0.08}
+          envMapIntensity={2.0}
         />
       </mesh>
 
