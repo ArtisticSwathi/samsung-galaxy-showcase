@@ -248,17 +248,35 @@ function PhoneOnTable({ introProgressRef, view, selectedColor, selectedMaterial 
 function ShowroomLighting() {
   return (
     <group>
-      <ambientLight intensity={0.08} color="#b0c8e8" />
-      <pointLight position={[0,    0.95,  0.25]} color="#ffffff" intensity={14} distance={1.1} decay={2} />
-      <pointLight position={[0,    0.28,  0.50]} color="#e8f2ff" intensity={10} distance={0.9} decay={2} />
-      <pointLight position={[-0.40,0.30,  0.30]} color="#d8ecff" intensity={8}  distance={0.85} decay={2} />
-      <pointLight position={[0.40, 0.30,  0.30]} color="#d8ecff" intensity={8}  distance={0.85} decay={2} />
-      <pointLight position={[0,    0.30, -0.50]} color="#99c8ff" intensity={10} distance={0.95} decay={2} />
-      <pointLight position={[-0.35,0.28, -0.40]} color="#88b8ff" intensity={6}  distance={0.8}  decay={2} />
-      <pointLight position={[0.35, 0.28, -0.40]} color="#88b8ff" intensity={6}  distance={0.8}  decay={2} />
-      <pointLight position={[-0.50,0.25,  0]}    color="#cce4ff" intensity={7}  distance={0.85} decay={2} />
-      <pointLight position={[0.50, 0.25,  0]}    color="#cce4ff" intensity={7}  distance={0.85} decay={2} />
-      <pointLight position={[0,    0.04,  0]}    color="#22d3ee" intensity={5}  distance={0.55} decay={2} />
+      {/* Symmetric omnidirectional rig — identical brightness from every angle ─────
+          Layout (top-down view):    BL ─ B ─ BR
+                                     │         │
+                                     L    ●    R      ● = overhead key
+                                     │         │
+                                     FL ─ F ─ FR
+          All cardinal distances equal (0.52 units). All diagonal distances equal.
+      ──────────────────────────────────────────────────────────────────────────── */}
+
+      {/* Very dim scene ambient — baseline for unlit sides */}
+      <ambientLight intensity={0.04} color="#c0d4f0" />
+
+      {/* OVERHEAD KEY — exactly above center, no Z bias */}
+      <pointLight position={[0,     1.05, 0]}    color="#ffffff" intensity={2.8} distance={1.2} decay={2} />
+
+      {/* CARDINAL RING — front / back / left / right at equal distances & intensities */}
+      <pointLight position={[0,     0.30,  0.52]} color="#e8f2ff" intensity={1.8} distance={0.90} decay={2} />
+      <pointLight position={[0,     0.30, -0.52]} color="#e8f2ff" intensity={1.8} distance={0.90} decay={2} />
+      <pointLight position={[-0.52, 0.30,  0]}    color="#ddeeff" intensity={1.8} distance={0.90} decay={2} />
+      <pointLight position={[0.52,  0.30,  0]}    color="#ddeeff" intensity={1.8} distance={0.90} decay={2} />
+
+      {/* DIAGONAL RING — 4 corners at equal distances & intensities */}
+      <pointLight position={[-0.37, 0.28,  0.37]} color="#cce4ff" intensity={1.2} distance={0.85} decay={2} />
+      <pointLight position={[0.37,  0.28,  0.37]} color="#cce4ff" intensity={1.2} distance={0.85} decay={2} />
+      <pointLight position={[-0.37, 0.28, -0.37]} color="#cce4ff" intensity={1.2} distance={0.85} decay={2} />
+      <pointLight position={[0.37,  0.28, -0.37]} color="#cce4ff" intensity={1.2} distance={0.85} decay={2} />
+
+      {/* UNDER-GLOW — cyan accent from platform (fully symmetric, centered) */}
+      <pointLight position={[0,     0.04,  0]}    color="#22d3ee" intensity={0.8} distance={0.55} decay={2} />
     </group>
   )
 }
