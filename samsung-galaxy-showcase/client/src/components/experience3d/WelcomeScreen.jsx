@@ -63,26 +63,26 @@ export default function WelcomeScreen({ onLoadComplete, onStartExperience }) {
           setWordHeading2(true);
         }, 300);
         
-        // t=4500ms: Silver sweep animation starts (well after all elements—heading, slogan, button—have fully appeared)
-        setTimeout(() => setSilverSweepActive(true), 4500);
+        // t=1500ms: Silver sweep animation starts immediately after heading finishes appearing (300ms + 1200ms transition)
+        setTimeout(() => setSilverSweepActive(true), 1500);
         
-        // t=2400ms: Slogan Word 1 ("Do") fades in (pure white)
-        setTimeout(() => setWordSlogan1(true), 2400);
+        // t=2620ms: Slogan Word 1 ("Do") fades in (pure white) immediately after the shimmer animation completes (1500ms + 720ms delay + 400ms duration)
+        setTimeout(() => setWordSlogan1(true), 2620);
         
-        // t=2600ms: Slogan Word 2 ("What") fades in
-        setTimeout(() => setWordSlogan2(true), 2600);
+        // t=2820ms: Slogan Word 2 ("What") fades in
+        setTimeout(() => setWordSlogan2(true), 2820);
         
-        // t=2800ms: Slogan Word 3 ("You") fades in
-        setTimeout(() => setWordSlogan3(true), 2800);
+        // t=3020ms: Slogan Word 3 ("You") fades in
+        setTimeout(() => setWordSlogan3(true), 3020);
         
-        // t=3000ms: Slogan Word 4 ("Can't") fades in
-        setTimeout(() => setWordSlogan4(true), 3000);
+        // t=3220ms: Slogan Word 4 ("Can't") fades in
+        setTimeout(() => setWordSlogan4(true), 3220);
  
-        // t=3800ms: CTA Button fades in at the bottom (exactly when the silver sweep completes)
-        setTimeout(() => setButtonVisible(true), 3800);
+        // t=4020ms: CTA Button fades in at the bottom (maintaining the original 800ms pacing from the last slogan word)
+        setTimeout(() => setButtonVisible(true), 4020);
 
-        // t=3400ms: Reveal completed. Gradually decelerate the gold sweep and come to rest
-        setTimeout(() => setIsIntroActive(false), 3400);
+        // t=4200ms: Reveal completed. Gradually decelerate the gold sweep and come to rest
+        setTimeout(() => setIsIntroActive(false), 4200);
       }
     };
 

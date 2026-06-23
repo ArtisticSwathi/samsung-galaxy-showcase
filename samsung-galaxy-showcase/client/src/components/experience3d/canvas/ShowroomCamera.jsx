@@ -88,17 +88,17 @@ export default function ShowroomCamera({ view, onIntroComplete }) {
       targetCurve.current.getPoint(0, lookTarget.current)
       camera.lookAt(lookTarget.current)
 
-      // Phase 1 — 4-second jet blast (fast start, natural decel via ease)
+      // Phase 1 — 3-second fast constant jet flight
       flightRef.current = gsap.to(progress, {
         value: 1,
-        duration: 4.0,
-        ease: 'power2.out',   // starts fast, eases out near the end
+        duration: 3.0,
+        ease: 'none',   // constant high speed throughout the flight
         onUpdate: () => {
           positionCurve.current.getPoint(progress.value, camera.position)
           targetCurve.current.getPoint(progress.value, lookTarget.current)
         },
         onComplete: () => {
-          // Phase 2 — 1-second smooth deceleration glide into reveal position
+          // Phase 2 — 1-second smooth deceleration glide into reveal position (during the 4th second)
           const decelTl = gsap.timeline()
           decelTl.to(camera.position, {
             x: REVEAL_POS.x, y: REVEAL_POS.y, z: REVEAL_POS.z,
