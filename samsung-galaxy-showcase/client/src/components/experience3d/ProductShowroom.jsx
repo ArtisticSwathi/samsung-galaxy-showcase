@@ -115,6 +115,18 @@ function PhoneOnTable({ introProgressRef, view, selectedColor, selectedMaterial 
       child.material = child.material.clone()
       const mat = child.material
 
+      // ── Customize display material to look like a blank / powered-off screen ──
+      if (mat.name === 'Display_ActiveArea') {
+        mat.map = null
+        mat.color = new THREE.Color('#030303')
+        mat.emissive = new THREE.Color('#000000')
+        mat.emissiveMap = null
+        mat.emissiveIntensity = 0
+        mat.roughness = 0.08
+        mat.metalness = 0.1
+        mat.needsUpdate = true
+      }
+
       // ── Store all original properties ───────────────────────────────────
       mat.userData.origColor         = mat.color.clone()
       mat.userData.origRoughness     = mat.roughness
