@@ -1,56 +1,18 @@
-import { useState } from 'react'
-import WelcomeScreen from './components/experience3d/WelcomeScreen'
-import FloatingBackground from './components/experience3d/FloatingBackground'
-import ProductShowroom from './components/experience3d/ProductShowroom'
+import { Outlet } from 'react-router-dom'
+import CartDrawer from './components/ecommerce/CartDrawer'
+import ChatbotWidget from './components/ecommerce/ChatbotWidget'
 
 function App() {
-  const [isLoaded, setIsLoaded] = useState(false)
-  const [view, setView] = useState('welcome') // 'welcome' | 'guided-intro' | 'showroom'
-  const [showWelcomeOverlay, setShowWelcomeOverlay] = useState(true)
-  const [show2DBackground, setShow2DBackground] = useState(true)
-
-  const handleStartExperience = () => {
-    setView('guided-intro')
-    setShowWelcomeOverlay(false)
-    setShow2DBackground(false)
-  }
-
   return (
-    <div className="relative min-h-screen text-white font-sans overflow-hidden selection:bg-cyan-500 selection:text-slate-950 bg-[#020204]">
-      {/* 1. 2D Starfield Background (Responds to mouse coordinates for parallax hover drift) */}
-      {show2DBackground && (
-        <div 
-          className={`absolute inset-0 w-full h-full z-0 transition-opacity duration-[1000ms] ease-in-out ${
-            isLoaded ? 'opacity-100' : 'opacity-0'
-          } ${
-            view !== 'welcome' ? 'opacity-0 pointer-events-none' : 'opacity-100'
-          }`}
-        >
-          <FloatingBackground />
-        </div>
-      )}
+    <div className="min-h-screen bg-[#020204] text-white selection:bg-cyan-500 selection:text-slate-950 font-sans antialiased overflow-x-hidden">
+      {/* Routed active sub-page */}
+      <Outlet />
 
-      {/* 2. 3D Product Showroom Canvas (Fades in when view changes from 'welcome') */}
-      {isLoaded && (
-        <div 
-          className={`absolute inset-0 w-full h-full z-10 ${
-            view !== 'welcome' ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-          }`}
-        >
-          <ProductShowroom 
-            view={view} 
-            onIntroComplete={() => setView('showroom')} 
-          />
-        </div>
-      )}
+      {/* Global sliding cart drawer */}
+      <CartDrawer />
 
-      {/* 3. Brand Welcome Screen Overlay */}
-      {showWelcomeOverlay && (
-        <WelcomeScreen 
-          onLoadComplete={() => setIsLoaded(true)} 
-          onStartExperience={handleStartExperience}
-        />
-      )}
+      {/* Floating luxury chatbot widget */}
+      <ChatbotWidget />
     </div>
   )
 }
