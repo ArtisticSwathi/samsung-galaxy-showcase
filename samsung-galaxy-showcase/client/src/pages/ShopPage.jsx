@@ -19,6 +19,22 @@ export default function ShopPage() {
   // Calculate final price based on selected storage
   const totalPrice = product.basePrice + selectedStorage.priceModifier
 
+  // Handle browser autoplay restrictions on mount
+  useEffect(() => {
+    const playVideo = async () => {
+      if (videoRef.current) {
+        try {
+          await videoRef.current.play()
+          setIsPlaying(true)
+        } catch (error) {
+          console.log("Autoplay was blocked by browser. User interaction required:", error)
+          setIsPlaying(false) // Show play icon so user can manually play it
+        }
+      }
+    }
+    playVideo()
+  }, [])
+
   const toggleVideoPlay = () => {
     if (videoRef.current) {
       if (isPlaying) {
@@ -57,13 +73,15 @@ export default function ShopPage() {
         <div className="absolute inset-0 w-full h-full z-0">
           <video 
             ref={videoRef}
-            src="/videos/Samsung-video-ad.mp4"
             className="w-full h-full object-cover scale-[1.01]"
             autoPlay 
             loop 
             muted 
             playsInline
-          />
+            preload="auto"
+          >
+            <source src="/videos/Samsung-video-ad.mp4" type="video/mp4" />
+          </video>
           {/* Luxurious overlays to ensure readability and cinematic tone */}
           <div className="absolute inset-0 bg-gradient-to-r from-[#020204]/90 via-[#020204]/50 to-[#020204]/80" />
           <div className="absolute inset-0 bg-gradient-to-t from-[#020204] via-transparent to-black/30" />
