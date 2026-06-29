@@ -1,6 +1,5 @@
-import { Outlet } from 'react-router-dom'
+git add .import { Outlet } from 'react-router-dom'
 import CartDrawer from './components/ecommerce/CartDrawer'
-import ChatbotWidget from './components/ecommerce/ChatbotWidget'
 
 function App() {
   return (
@@ -10,11 +9,9 @@ function App() {
 
       {/* Global sliding cart drawer */}
       <CartDrawer />
-
-      {/* Floating luxury chatbot widget */}
-      <ChatbotWidget />
     </div>
   )
 }
 
 export default App
+

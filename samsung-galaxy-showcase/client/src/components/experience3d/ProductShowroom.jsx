@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
+import { useSelector } from 'react-redux'
+import AuthModal from '../common/AuthModal'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { Sparkles, useGLTF, OrbitControls } from '@react-three/drei'
 import ShowroomCamera from './canvas/ShowroomCamera'
@@ -297,6 +299,13 @@ function ShowroomLighting() {
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function ProductShowroom({ view, onIntroComplete }) {
   const navigate = useNavigate()
+  const location = useLocation()
+  const searchParams = new URLSearchParams(location.search)
+  const autoLogin = searchParams.get('login') === 'true'
+
+  const { isAuthenticated } = useSelector((state) => state.auth)
+  const [showAuthModal, setShowAuthModal] = useState(autoLogin)
+
   const introProgressRef  = useRef(0)
   const [buttonsVisible,   setButtonsVisible]  = useState(false)
   const [configuratorMode, setConfiguratorMode] = useState(false)
@@ -307,6 +316,14 @@ export default function ProductShowroom({ view, onIntroComplete }) {
   const [selectedColor,    setSelectedColor]    = useState(null)
   // Default: 'original' = use GLB material properties (matInitRef skips first render)
   const [selectedMaterial, setSelectedMaterial] = useState('original')
+
+  const handleBuyNow = () => {
+    if (isAuthenticated) {
+      navigate('/shop')
+    } else {
+      setShowAuthModal(true)
+    }
+  }
 
   const orbitTimerRef = useRef(null)
 
@@ -411,7 +428,7 @@ export default function ProductShowroom({ view, onIntroComplete }) {
       <div className={`absolute bottom-10 right-10 flex flex-col gap-3 transition-all duration-700 ease-out pointer-events-auto ${
         buttonsVisible && !configuratorMode ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6 pointer-events-none'
       }`}>
-        <button onClick={() => navigate('/shop')}
+        <button onClick={handleBuyNow}
           className="relative px-8 py-3.5 rounded-2xl text-sm font-semibold tracking-wide text-white cursor-pointer transition-all duration-300 hover:scale-[1.03] active:scale-[0.98]"
           style={{ background:'linear-gradient(135deg,#1a6aff,#0044cc)', boxShadow:'0 0 24px rgba(26,106,255,0.5),inset 0 1px 0 rgba(255,255,255,0.15)' }}
           onMouseEnter={e=>e.currentTarget.style.boxShadow='0 0 38px rgba(26,106,255,0.75),inset 0 1px 0 rgba(255,255,255,0.2)'}
@@ -549,6 +566,11 @@ export default function ProductShowroom({ view, onIntroComplete }) {
           )}
         </>
       )}
+
+      {/* Auth Modal for unauthenticated Buy Now clicks */}
+      <div className="pointer-events-auto">
+        <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
+      </div>
 
     </div>
   )

@@ -5,31 +5,34 @@ import ShopPage from './pages/ShopPage'
 import CheckoutPage from './pages/CheckoutPage'
 import OrderConfirmationPage from './pages/OrderConfirmationPage'
 import StoreLocatorPage from './pages/StoreLocatorPage'
+import ProtectedRoute from './components/common/ProtectedRoute'
 
 export const router = createBrowserRouter([
   {
+    // Landing Page — standalone promotional showcase (no shared Navbar layout)
+    path: '/',
+    element: <Experience3DPage />,
+  },
+  {
+    // E-commerce Website — shared App layout with Navbar, Cart Drawer, etc.
     path: '/',
     element: <App />,
     children: [
       {
-        path: '',
-        element: <Experience3DPage />,
-      },
-      {
         path: 'shop',
-        element: <ShopPage />,
+        element: <ProtectedRoute><ShopPage /></ProtectedRoute>,
       },
       {
         path: 'checkout',
-        element: <CheckoutPage />,
+        element: <ProtectedRoute><CheckoutPage /></ProtectedRoute>,
       },
       {
         path: 'order-confirmation',
-        element: <OrderConfirmationPage />,
+        element: <ProtectedRoute><OrderConfirmationPage /></ProtectedRoute>,
       },
       {
         path: 'stores',
-        element: <StoreLocatorPage />,
+        element: <ProtectedRoute><StoreLocatorPage /></ProtectedRoute>,
       },
     ],
   },

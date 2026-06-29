@@ -1,13 +1,18 @@
 import { useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import WelcomeScreen from '../components/experience3d/WelcomeScreen'
 import FloatingBackground from '../components/experience3d/FloatingBackground'
 import ProductShowroom from '../components/experience3d/ProductShowroom'
 
 export default function Experience3DPage() {
-  const [isLoaded, setIsLoaded] = useState(false)
-  const [view, setView] = useState('welcome') // 'welcome' | 'guided-intro' | 'showroom'
-  const [showWelcomeOverlay, setShowWelcomeOverlay] = useState(true)
-  const [show2DBackground, setShow2DBackground] = useState(true)
+  const location = useLocation()
+  const searchParams = new URLSearchParams(location.search)
+  const autoLogin = searchParams.get('login') === 'true'
+
+  const [isLoaded, setIsLoaded] = useState(autoLogin)
+  const [view, setView] = useState(autoLogin ? 'showroom' : 'welcome') // 'welcome' | 'guided-intro' | 'showroom'
+  const [showWelcomeOverlay, setShowWelcomeOverlay] = useState(!autoLogin)
+  const [show2DBackground, setShow2DBackground] = useState(!autoLogin)
 
   const handleStartExperience = () => {
     setView('guided-intro')

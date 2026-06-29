@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import Navbar from '../components/common/Navbar'
 import { addToCart, openCart } from '../store/cartSlice'
+import ChatbotWidget from '../components/ecommerce/ChatbotWidget'
 
 export default function ShopPage() {
   const dispatch = useDispatch()
@@ -72,16 +73,16 @@ export default function ShopPage() {
         <div className="relative z-10 max-w-7xl mx-auto px-6 w-full h-full flex flex-col justify-center pt-24">
           <div className="max-w-2xl space-y-6">
             <span className="text-cyan-400 font-mono text-[10px] tracking-[0.4em] uppercase font-semibold">
-              THE NEXT GENERATION
+              WELCOME TO GALAXY
             </span>
             <h1 className="text-4xl md:text-7xl font-bold tracking-tight leading-[1.1] uppercase">
-              Galaxy S23 <br />
+              THE NEW ERA <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-600">
-                Ultra
+                OF MOBILE
               </span>
             </h1>
             <p className="text-sm md:text-base text-white/70 font-light leading-relaxed max-w-lg">
-              Experience the pinnacle of smartphone innovation. Built with sustainable materials, featuring a 200MP camera, and driven by the fastest Snapdragon processor in Galaxy history.
+              Discover the ultimate ecosystem of innovation. From revolutionary foldable displays to pro-grade cameras and seamless connectivity, experience the pinnacle of sustainable technology designed for the future.
             </p>
             
             <div className="flex flex-wrap gap-4 pt-4">
@@ -89,13 +90,13 @@ export default function ShopPage() {
                 href="#configurator-section"
                 className="px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black text-xs font-bold uppercase tracking-wider rounded-2xl transition-all duration-300 shadow-xl shadow-cyan-500/10 hover:scale-[1.02] active:scale-[0.98]"
               >
-                Configure Now
+                EXPLORE THE RANGE
               </a>
               <a 
                 href="#specs-section"
                 className="px-8 py-3.5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-cyan-400/40 rounded-2xl text-xs font-semibold uppercase tracking-wider transition-all duration-300"
               >
-                Learn Specifications
+                FIND YOUR GALAXY
               </a>
             </div>
           </div>
@@ -118,17 +119,6 @@ export default function ShopPage() {
               </svg>
             )}
           </button>
-          <span className="text-[10px] uppercase font-mono tracking-widest text-white/50">
-            {isPlaying ? "PAUSE PREVIEW" : "PLAY PREVIEW"}
-          </span>
-        </div>
-
-        {/* Scroll Indicator */}
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 hidden md:flex flex-col items-center gap-2">
-          <span className="text-[9px] uppercase font-mono tracking-[0.3em] text-white/30">SCROLL DOWN</span>
-          <div className="w-5 h-9 rounded-full border border-white/20 flex justify-center p-1.5">
-            <div className="w-1 h-2 rounded-full bg-cyan-400 animate-bounce" />
-          </div>
         </div>
       </section>
 
@@ -408,6 +398,9 @@ export default function ShopPage() {
           </div>
         </div>
       </section>
+
+      {/* Floating luxury chatbot widget only on ShopPage */}
+      <ChatbotWidget />
 
     </div>
   )
