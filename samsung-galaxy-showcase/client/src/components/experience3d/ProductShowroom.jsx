@@ -79,8 +79,8 @@ function SpaceBackground({ introProgressRef, view }) {
         <pointsMaterial size={0.14} color="#ffffff" sizeAttenuation transparent opacity={0.8} depthWrite={false} />
       </points>
       <Sparkles count={120} scale={14} size={2.5} speed={0.2}  color="#ffffff" opacity={0.6} />
-      <Sparkles count={70}  scale={18} size={3.5} speed={0.15} color="#22d3ee" opacity={0.4} />
-      <Sparkles count={40}  scale={12} size={2.0} speed={0.1}  color="#a855f7" opacity={0.28} />
+      <Sparkles count={70}  scale={18} size={3.5} speed={0.15} color="#ffffff" opacity={0.4} />
+      <Sparkles count={40}  scale={12} size={2.0} speed={0.1}  color="#ffffff" opacity={0.28} />
     </group>
   )
 }
@@ -273,25 +273,25 @@ function ShowroomLighting() {
       ──────────────────────────────────────────────────────────────────────────── */}
 
       {/* Very dim scene ambient */}
-      <ambientLight intensity={0.06} color="#c0d4f0" />
+      <ambientLight intensity={0.06} color="#ffffff" />
 
       {/* OVERHEAD KEY — softbox character: wider distance, gentle decay */}
       <pointLight position={[0,     1.05, 0]}    color="#ffffff" intensity={2.0} distance={2.2} decay={1.5} />
 
       {/* CARDINAL RING — wraps further, softer falloff */}
-      <pointLight position={[0,     0.30,  0.52]} color="#e8f2ff" intensity={1.3} distance={1.6} decay={1.5} />
-      <pointLight position={[0,     0.30, -0.52]} color="#e8f2ff" intensity={1.3} distance={1.6} decay={1.5} />
-      <pointLight position={[-0.52, 0.30,  0]}    color="#ddeeff" intensity={1.3} distance={1.6} decay={1.5} />
-      <pointLight position={[0.52,  0.30,  0]}    color="#ddeeff" intensity={1.3} distance={1.6} decay={1.5} />
+      <pointLight position={[0,     0.30,  0.52]} color="#ffffff" intensity={1.3} distance={1.6} decay={1.5} />
+      <pointLight position={[0,     0.30, -0.52]} color="#ffffff" intensity={1.3} distance={1.6} decay={1.5} />
+      <pointLight position={[-0.52, 0.30,  0]}    color="#ffffff" intensity={1.3} distance={1.6} decay={1.5} />
+      <pointLight position={[0.52,  0.30,  0]}    color="#ffffff" intensity={1.3} distance={1.6} decay={1.5} />
 
       {/* DIAGONAL RING */}
-      <pointLight position={[-0.37, 0.28,  0.37]} color="#cce4ff" intensity={0.9} distance={1.4} decay={1.5} />
-      <pointLight position={[0.37,  0.28,  0.37]} color="#cce4ff" intensity={0.9} distance={1.4} decay={1.5} />
-      <pointLight position={[-0.37, 0.28, -0.37]} color="#cce4ff" intensity={0.9} distance={1.4} decay={1.5} />
-      <pointLight position={[0.37,  0.28, -0.37]} color="#cce4ff" intensity={0.9} distance={1.4} decay={1.5} />
+      <pointLight position={[-0.37, 0.28,  0.37]} color="#ffffff" intensity={0.9} distance={1.4} decay={1.5} />
+      <pointLight position={[0.37,  0.28,  0.37]} color="#ffffff" intensity={0.9} distance={1.4} decay={1.5} />
+      <pointLight position={[-0.37, 0.28, -0.37]} color="#ffffff" intensity={0.9} distance={1.4} decay={1.5} />
+      <pointLight position={[0.37,  0.28, -0.37]} color="#ffffff" intensity={0.9} distance={1.4} decay={1.5} />
 
-      {/* UNDER-GLOW — cyan platform accent */}
-      <pointLight position={[0,     0.04,  0]}    color="#22d3ee" intensity={0.6} distance={0.9} decay={1.8} />
+      {/* UNDER-GLOW — white platform accent */}
+      <pointLight position={[0,     0.04,  0]}    color="#ffffff" intensity={0.6} distance={0.9} decay={1.8} />
     </group>
   )
 }

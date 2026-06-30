@@ -21,15 +21,15 @@ const DigitalWallShader = {
     void main() {
       vec2 uv = vUv;
       
-      // 1. Futuristic dark carbon/navy digital background
-      vec3 colorBg = vec3(0.03, 0.05, 0.09); // Deep dark space navy
-      vec3 colorGlow = vec3(0.06, 0.10, 0.18); // Soft neon navy glow
+      // 1. Futuristic clean premium white/light-gray digital background
+      vec3 colorBg = vec3(0.94, 0.95, 0.97); // Soft off-white
+      vec3 colorGlow = vec3(0.98, 0.99, 1.0); // Pure white glow
       
       // Dynamic moving ambient lighting wash
       float wash = sin(uv.x * 1.5 + uTime * 0.1) * cos(uv.y * 1.5 - uTime * 0.08) * 0.5 + 0.5;
       vec3 finalColor = mix(colorBg, colorGlow, wash * 0.6);
       
-      // 2. Cyber neon tech grid (cyan color)
+      // 2. Clean silver-gray digital grid
       float gridX = sin(uv.x * 32.0) * 0.5 + 0.5;
       gridX = smoothstep(0.98, 0.995, gridX);
       
@@ -37,17 +37,17 @@ const DigitalWallShader = {
       gridY = smoothstep(0.98, 0.995, gridY);
       
       float gridMask = clamp(gridX + gridY, 0.0, 1.0);
-      finalColor = mix(finalColor, vec3(0.0, 0.70, 0.95), gridMask * 0.45);
+      finalColor = mix(finalColor, vec3(0.85, 0.88, 0.92), gridMask * 0.45);
       
-      // 3. Cyber laser light sweep (bright cyan sweep)
+      // 3. Glowing white light sweep
       float sweep = sin(uv.y * 2.5 - uTime * 0.4) * 0.5 + 0.5;
       sweep = pow(sweep, 8.0); // sharp glowing laser sweep
-      finalColor = mix(finalColor, vec3(0.0, 0.85, 1.0), sweep * 0.35);
+      finalColor = mix(finalColor, vec3(1.0, 1.0, 1.0), sweep * 0.35);
       
       // Soft vignette
       float vignette = uv.x * (1.0 - uv.x) * uv.y * (1.0 - uv.y) * 16.0;
       vignette = pow(vignette, 0.3);
-      finalColor *= mix(0.94, 1.0, vignette);
+      finalColor *= mix(0.97, 1.0, vignette);
       
       gl_FragColor = vec4(finalColor, 1.0);
     }
@@ -94,12 +94,12 @@ export default function ShowroomEnvironment({ introProgressRef, view }) {
         child.receiveShadow = true
         if (child.material) {
           child.material = child.material.clone()
-          // Dark premium charcoal metal — does NOT fight with the phone for attention
-          child.material.color             = new THREE.Color('#1a2235')
-          child.material.metalness         = 0.85
-          child.material.roughness         = 0.12
-          child.material.emissive          = new THREE.Color('#06111f')
-          child.material.emissiveIntensity = 0.15
+          // Premium silver metal - glossy clean look
+          child.material.color             = new THREE.Color('#cbd5e1')
+          child.material.metalness         = 0.95
+          child.material.roughness         = 0.08
+          child.material.emissive          = new THREE.Color('#111111')
+          child.material.emissiveIntensity = 0.1
           child.material.transparent = false
           child.material.opacity = 1.0
         }
@@ -237,7 +237,7 @@ export default function ShowroomEnvironment({ introProgressRef, view }) {
   return (
     <group ref={groupRef}>
 
-      {/* ── Polished Floor with Reflections (Dark Obsidian Theme) ── */}
+      {/* ── Polished Floor with Reflections (Clean White Theme) ── */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -tableHeight, 0]} receiveShadow>
         <planeGeometry args={[25, 25]} />
         <MeshReflectorMaterial
@@ -249,16 +249,16 @@ export default function ShowroomEnvironment({ introProgressRef, view }) {
           depthScale={1.0}
           minDepthThreshold={0.2}
           maxDepthThreshold={1.4}
-          color="#060b13" // Deep obsidian dark floor
+          color="#fafafa" // Glossy clean white floor
           metalness={0.9} // Extremely glossy/reflective
         />
       </mesh>
 
-      {/* ── Pedestal Stage Base (dark premium metal disc) ── */}
+      {/* ── Pedestal Stage Base (premium silver metal disc) ── */}
       <mesh position={[0, -tableHeight + 0.02, 0]} receiveShadow castShadow>
         <cylinderGeometry args={[1.2, 1.2, 0.04, 64]} />
         <meshStandardMaterial
-          color="#0d1520"  // Deep dark navy — premium product stage
+          color="#cbd5e1"  // Premium silver stage
           metalness={0.9}
           roughness={0.08}
           envMapIntensity={2.0}
@@ -285,7 +285,7 @@ export default function ShowroomEnvironment({ introProgressRef, view }) {
       <mesh position={[0, wallY, 0]} receiveShadow>
         <cylinderGeometry args={[8.08, 8.08, wallHeight, 64, 1, true, 2.006, 5.410]} />
         <meshStandardMaterial
-          color="#0f172a" // Deep navy/carbon metal
+          color="#e2e8f0" // Titanium white/light gray
           metalness={0.85}
           roughness={0.18}
           side={THREE.BackSide} // Only visible from the outside
@@ -296,7 +296,7 @@ export default function ShowroomEnvironment({ introProgressRef, view }) {
       <mesh position={[0, ceilingY, 0]} rotation={[Math.PI / 2, 0, 0]} castShadow>
         <circleGeometry args={[8.0, 64]} />
         <meshStandardMaterial
-          color="#0f172a" // Dark metallic ceiling
+          color="#f8fafc" // Bright clean ceiling
           metalness={0.8}
           roughness={0.2}
           side={THREE.DoubleSide}
@@ -307,7 +307,7 @@ export default function ShowroomEnvironment({ introProgressRef, view }) {
       <mesh position={[0, ceilingY + 0.02, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <circleGeometry args={[8.08, 64]} />
         <meshStandardMaterial
-          color="#1e293b"
+          color="#cbd5e1"
           metalness={0.8}
           roughness={0.2}
         />
@@ -317,7 +317,7 @@ export default function ShowroomEnvironment({ introProgressRef, view }) {
       <mesh position={[0, -tableHeight - 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[8.08, 64]} />
         <meshStandardMaterial
-          color="#1e293b"
+          color="#cbd5e1"
           metalness={0.8}
           roughness={0.2}
         />
@@ -326,13 +326,13 @@ export default function ShowroomEnvironment({ introProgressRef, view }) {
       {/* ── Top Outer Glowing Neon Ring (full 360-degree ring) ── */}
       <mesh position={[0, ceilingY + 0.01, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <ringGeometry args={[8.08, 8.12, 64]} />
-        <meshBasicMaterial color="#22d3ee" toneMapped={false} side={THREE.DoubleSide} />
+        <meshBasicMaterial color="#ffffff" toneMapped={false} side={THREE.DoubleSide} />
       </mesh>
 
       {/* ── Bottom Outer Glowing Neon Ring (full 360-degree ring) ── */}
       <mesh position={[0, -tableHeight - 0.01, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <ringGeometry args={[8.08, 8.12, 64]} />
-        <meshBasicMaterial color="#22d3ee" toneMapped={false} side={THREE.DoubleSide} />
+        <meshBasicMaterial color="#ffffff" toneMapped={false} side={THREE.DoubleSide} />
       </mesh>
 
       {/* ── Solid 3D Metallic Door Frames / Jambs (bridges inner/outer shell gap) ── */}
@@ -340,7 +340,7 @@ export default function ShowroomEnvironment({ introProgressRef, view }) {
       <mesh ref={leftStripRef} position={[-3.38, wallY, 7.25]}>
         <boxGeometry args={[0.15, wallHeight, 0.12]} />
         <meshStandardMaterial 
-          color="#1e293b" 
+          color="#cbd5e1" 
           metalness={0.8}
           roughness={0.2}
         />
@@ -350,7 +350,7 @@ export default function ShowroomEnvironment({ introProgressRef, view }) {
       <mesh ref={rightStripRef} position={[3.38, wallY, 7.25]}>
         <boxGeometry args={[0.15, wallHeight, 0.12]} />
         <meshStandardMaterial 
-          color="#1e293b" 
+          color="#cbd5e1" 
           metalness={0.8}
           roughness={0.2}
         />
@@ -360,7 +360,7 @@ export default function ShowroomEnvironment({ introProgressRef, view }) {
       <mesh position={[0, ceilingY - 0.02, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <ringGeometry args={[7.96, 8.0, 64]} />
         <meshBasicMaterial 
-          color="#22d3ee" // Cyan glowing ring
+          color="#ffffff" // White glowing ring
           toneMapped={false} 
           side={THREE.DoubleSide}
         />
@@ -374,8 +374,8 @@ export default function ShowroomEnvironment({ introProgressRef, view }) {
           <cylinderGeometry args={[8.04, 8.04, wallHeight, 32, 1, true, 1.57, 0.436]} />
           <meshStandardMaterial
             ref={leftDoorMatRef}
-            color="#0f172a"
-            emissive="#22d3ee"
+            color="#f1f5f9"
+            emissive="#ffffff"
             emissiveIntensity={0.12}
             roughness={0.15}
             metalness={0.9}
@@ -388,21 +388,21 @@ export default function ShowroomEnvironment({ introProgressRef, view }) {
         {/* Right edge bar (at 90 degrees) */}
         <mesh position={[0, wallY, 8.04]}>
           <boxGeometry args={[0.1, wallHeight, 0.05]} />
-          <meshStandardMaterial color="#1e293b" metalness={0.85} roughness={0.2} />
+          <meshStandardMaterial color="#cbd5e1" metalness={0.85} roughness={0.2} />
         </mesh>
         {/* Left edge bar (at 115 degrees) */}
         <mesh position={[-3.40, wallY, 7.29]} rotation={[0, 0.436, 0]}>
           <boxGeometry args={[0.1, wallHeight, 0.05]} />
-          <meshStandardMaterial color="#1e293b" metalness={0.85} roughness={0.2} />
+          <meshStandardMaterial color="#cbd5e1" metalness={0.85} roughness={0.2} />
         </mesh>
-        {/* Soft cyan edge glows */}
+        {/* Soft white edge glows */}
         <mesh position={[0, wallY, 8.06]}>
           <planeGeometry args={[0.02, wallHeight]} />
-          <meshBasicMaterial color="#22d3ee" toneMapped={false} />
+          <meshBasicMaterial color="#ffffff" toneMapped={false} />
         </mesh>
         <mesh position={[-3.42, wallY, 7.31]} rotation={[0, 0.436, 0]}>
           <planeGeometry args={[0.02, wallHeight]} />
-          <meshBasicMaterial color="#22d3ee" toneMapped={false} />
+          <meshBasicMaterial color="#ffffff" toneMapped={false} />
         </mesh>
       </group>
 
@@ -413,8 +413,8 @@ export default function ShowroomEnvironment({ introProgressRef, view }) {
           <cylinderGeometry args={[8.04, 8.04, wallHeight, 32, 1, true, 1.134, 0.436]} />
           <meshStandardMaterial
             ref={rightDoorMatRef}
-            color="#0f172a"
-            emissive="#22d3ee"
+            color="#f1f5f9"
+            emissive="#ffffff"
             emissiveIntensity={0.12}
             roughness={0.15}
             metalness={0.9}
@@ -427,30 +427,30 @@ export default function ShowroomEnvironment({ introProgressRef, view }) {
         {/* Left edge bar (at 90 degrees) */}
         <mesh position={[0, wallY, 8.04]}>
           <boxGeometry args={[0.1, wallHeight, 0.05]} />
-          <meshStandardMaterial color="#1e293b" metalness={0.85} roughness={0.2} />
+          <meshStandardMaterial color="#cbd5e1" metalness={0.85} roughness={0.2} />
         </mesh>
         {/* Right edge bar (at 65 degrees) */}
         <mesh position={[3.40, wallY, 7.29]} rotation={[0, -0.436, 0]}>
           <boxGeometry args={[0.1, wallHeight, 0.05]} />
-          <meshStandardMaterial color="#1e293b" metalness={0.85} roughness={0.2} />
+          <meshStandardMaterial color="#cbd5e1" metalness={0.85} roughness={0.2} />
         </mesh>
-        {/* Soft cyan edge glows */}
+        {/* Soft white edge glows */}
         <mesh position={[0, wallY, 8.06]}>
           <planeGeometry args={[0.02, wallHeight]} />
-          <meshBasicMaterial color="#22d3ee" toneMapped={false} />
+          <meshBasicMaterial color="#ffffff" toneMapped={false} />
         </mesh>
         <mesh position={[3.42, wallY, 7.31]} rotation={[0, -0.436, 0]}>
           <planeGeometry args={[0.02, wallHeight]} />
-          <meshBasicMaterial color="#22d3ee" toneMapped={false} />
+          <meshBasicMaterial color="#ffffff" toneMapped={false} />
         </mesh>
       </group>
 
-      {/* ── Product circle base (Cyan glowing glass disc on the table) ── */}
+      {/* ── Product circle base (White glowing glass disc on the table) ── */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.001, 0]}>
         <circleGeometry args={[2.0, 128]} />
         <meshStandardMaterial 
-          color="#0f172a" 
-          emissive="#22d3ee"
+          color="#ffffff" 
+          emissive="#ffffff"
           emissiveIntensity={0.35}
           metalness={0.9} 
           roughness={0.05} 
