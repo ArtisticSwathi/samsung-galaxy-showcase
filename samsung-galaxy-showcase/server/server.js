@@ -1,8 +1,7 @@
-const express = require('express');
 const mongoose = require('mongoose'); // This is the line you were missing!
 require('dotenv').config();
+const app = require('./src/app');
 
-const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Connect to MongoDB

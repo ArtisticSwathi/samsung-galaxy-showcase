@@ -5,6 +5,7 @@ import ShopPage from './pages/ShopPage'
 import CheckoutPage from './pages/CheckoutPage'
 import OrderConfirmationPage from './pages/OrderConfirmationPage'
 import StoreLocatorPage from './pages/StoreLocatorPage'
+import ProfilePage from './pages/ProfilePage'
 import ProtectedRoute from './components/common/ProtectedRoute'
 
 export const router = createBrowserRouter([
@@ -33,6 +34,10 @@ export const router = createBrowserRouter([
       {
         path: 'stores',
         element: <ProtectedRoute><StoreLocatorPage /></ProtectedRoute>,
+      },
+      {
+        path: 'profile',
+        element: <ProtectedRoute><ProfilePage /></ProtectedRoute>,
       },
     ],
   },

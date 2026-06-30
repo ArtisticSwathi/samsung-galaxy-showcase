@@ -1,11 +1,18 @@
 const express = require('express');
 const cors = require('cors');
+const authRoutes = require('./routes/authRoutes');
+const userRoutes = require('./routes/userRoutes');
+const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
 
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
 
 // Basic health check route
 app.get('/health', (req, res) => {
@@ -15,5 +22,8 @@ app.get('/health', (req, res) => {
     timestamp: new Date()
   });
 });
+
+// Error handling middleware (must be registered last)
+app.use(errorHandler);
 
 module.exports = app;
