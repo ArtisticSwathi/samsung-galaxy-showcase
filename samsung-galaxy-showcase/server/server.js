@@ -32,6 +32,7 @@ async function seedDatabase() {
 
     await Product.create([
       {
+        _id: "6a48b3ccde431de242f7214b",
         name: "Samsung Galaxy S26 5G",
         price: 79999.00,
         description: "Android 16, 12 GB RAM, 3.8 GHz CPU, AI Phone, Photo Assist, Creative Studio, 50MP Camera with ProVisual Engine, 4300mAh Battery.",
@@ -53,6 +54,7 @@ async function seedDatabase() {
         createdAt: new Date("2026-01-10")
       },
       {
+        _id: "6a48b3ccde431de242f7214a",
         name: "Samsung Galaxy Z Fold7 5G",
         price: 186999.00, // Actual ₹1,86,999.00
         description: "Android 16.0, 12 GB RAM, Snapdragon 8 Elite, 4.47 GHz, 200MP Camera, Ultra-Smooth Gaming, Google Gemini.",
@@ -75,6 +77,7 @@ async function seedDatabase() {
         createdAt: new Date("2026-07-04")
       },
       {
+        _id: "6a48b3ccde431de242f7214c",
         name: "Samsung Galaxy S25 Ultra 5G",
         price: 84999.00, // Actual ₹84,999.00
         description: "Android 15.0, 12 GB RAM, Snapdragon 8 Elite, 4.47 GHz, 200MP Camera, S Pen Included, Long Battery Life.",

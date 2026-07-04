@@ -1,16 +1,94 @@
+import { useState, useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import { Link } from 'react-router-dom'
 import Navbar from '../components/common/Navbar'
 import CheckoutForm from '../components/ecommerce/CheckoutForm'
+import { loadStripe } from '@stripe/stripe-js'
+import { Elements } from '@stripe/react-stripe-js'
+
+// Initialize Stripe publishable key outside of render
+const stripePromise = loadStripe('pk_test_51TpPz2H2wNT6iXxFgwua4mPayT8QvNx2z8WY9rlYud1ZwQARnb9Jc2LrSwXbGcySLK8e2PhN44AUqhMOcxujHsh400vOZ7KjXU')
+
+// appearance configurations matching the dark/neon accent styling of the MERN showcase app
+const appearance = {
+  theme: 'night',
+  variables: {
+    colorPrimary: '#22d3ee', // Neon Cyan
+    colorBackground: '#020204', // Dark mode background
+    colorText: '#ffffff',
+    colorDanger: '#ef4444',
+    fontFamily: 'Outfit, Inter, sans-serif',
+    borderRadius: '16px',
+    spacingGridRow: '20px',
+  },
+  rules: {
+    '.Input': {
+      border: '1px solid rgba(255, 255, 255, 0.1)',
+      backgroundColor: 'rgba(255, 255, 255, 0.02)',
+      color: '#ffffff',
+      transition: 'border-color 0.3s, box-shadow 0.3s',
+      fontSize: '12px',
+      padding: '14px 16px',
+    },
+    '.Input:hover': {
+      borderColor: 'rgba(255, 255, 255, 0.2)',
+    },
+    '.Input:focus': {
+      borderColor: '#22d3ee',
+      boxShadow: '0 0 0 1px rgba(34, 211, 238, 0.2)',
+    },
+    '.Label': {
+      color: 'rgba(255, 255, 255, 0.6)',
+      fontSize: '10px',
+      textTransform: 'uppercase',
+      letterSpacing: '0.05em',
+      marginBottom: '6px',
+      fontWeight: '500',
+    }
+  }
+}
 
 export default function CheckoutPage() {
   const cartItems = useSelector((state) => state.cart.items)
+  const [clientSecret, setClientSecret] = useState(null)
+  const [loadingIntent, setLoadingIntent] = useState(false)
+  const [intentError, setIntentError] = useState(null)
   
   // Calculate cart pricing breakdown
   const subtotal = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0)
-  const shipping = 0 // Complimentary
   const estimatedTax = subtotal * 0.08 // 8% sales tax
   const total = subtotal + estimatedTax
+
+  useEffect(() => {
+    if (cartItems.length === 0) return
+
+    const getPaymentIntent = async () => {
+      setLoadingIntent(true)
+      setIntentError(null)
+      try {
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+        const response = await fetch(`${API_URL}/create-payment-intent`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ items: cartItems }),
+        })
+        const data = await response.json()
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to initialize secure transaction')
+        }
+        setClientSecret(data.clientSecret)
+      } catch (err) {
+        console.error("Secure Checkout error:", err)
+        setIntentError(err.message)
+      } finally {
+        setLoadingIntent(false)
+      }
+    }
+
+    getPaymentIntent()
+  }, [cartItems])
 
   return (
     <div className="min-h-screen bg-[#020204] text-white selection:bg-cyan-500 selection:text-slate-950 font-sans overflow-x-hidden">
@@ -32,7 +110,7 @@ export default function CheckoutPage() {
           </div>
           <h1 className="text-3xl md:text-5xl font-bold uppercase tracking-tight">SECURE TRANSACTION</h1>
           <p className="text-white/60 font-light text-sm max-w-md">
-            Please fill in your delivery and billing credentials below. Your transaction is protected with military-grade encryption.
+            Please fill in your delivery and payment credentials below. Your transaction is protected with military-grade encryption.
           </p>
         </div>
 
@@ -60,9 +138,36 @@ export default function CheckoutPage() {
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
             
-            {/* Left side: Checkout Form */}
+            {/* Left side: Checkout Form wrapped in Elements */}
             <div className="lg:col-span-7 bg-white/[0.01] border border-white/5 rounded-3xl p-8 md:p-12 shadow-2xl">
-              <CheckoutForm />
+              {loadingIntent ? (
+                <div className="flex flex-col items-center justify-center py-24 space-y-4">
+                  <div className="w-10 h-10 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+                  <p className="text-xs uppercase tracking-widest text-cyan-400 font-mono">Initializing Secure Gateway...</p>
+                </div>
+              ) : intentError ? (
+                <div className="py-16 text-center space-y-6">
+                  <div className="w-12 h-12 rounded-2xl bg-red-950/20 border border-red-500/20 flex items-center justify-center text-red-400 mx-auto">
+                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m0-10.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.249-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-bold uppercase tracking-wider text-white">Payment Gateway Error</h3>
+                  <p className="text-white/50 font-light text-xs tracking-wide max-w-sm mx-auto leading-relaxed">
+                    {intentError}. Please verify that the local backend server is running and connected to MongoDB.
+                  </p>
+                  <button 
+                    onClick={() => window.location.reload()}
+                    className="px-8 py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs font-bold uppercase tracking-widest rounded-2xl transition-all"
+                  >
+                    Retry Connection
+                  </button>
+                </div>
+              ) : clientSecret ? (
+                <Elements stripe={stripePromise} options={{ clientSecret, appearance }}>
+                  <CheckoutForm />
+                </Elements>
+              ) : null}
             </div>
 
             {/* Right side: Order Summary */}
