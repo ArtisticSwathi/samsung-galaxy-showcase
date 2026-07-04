@@ -287,7 +287,7 @@ export default function CheckoutForm() {
               PROCESSING TRANSACTION...
             </span>
           ) : (
-            `COMPLETE PURCHASE - $${total.toFixed(2)}`
+            `COMPLETE PURCHASE - ₹${total.toLocaleString('en-IN')}`
           )}
         </button>
       </div>

@@ -91,7 +91,7 @@ export default function CheckoutPage() {
                         </p>
                       </div>
                       <span className="text-xs font-semibold text-cyan-400 font-mono">
-                        ${(item.price * item.quantity).toFixed(2)}
+                        ₹{(item.price * item.quantity).toLocaleString('en-IN')}
                       </span>
                     </div>
                   ))}
@@ -103,7 +103,7 @@ export default function CheckoutPage() {
                 <div className="space-y-3.5 text-xs font-light text-white/60 tracking-wide">
                   <div className="flex justify-between">
                     <span>Subtotal</span>
-                    <span className="font-mono text-white">${subtotal.toFixed(2)}</span>
+                    <span className="font-mono text-white">₹{subtotal.toLocaleString('en-IN')}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Complimentary Delivery</span>
@@ -111,14 +111,14 @@ export default function CheckoutPage() {
                   </div>
                   <div className="flex justify-between">
                     <span>Estimated Sales Tax (8%)</span>
-                    <span className="font-mono text-white">${estimatedTax.toFixed(2)}</span>
+                    <span className="font-mono text-white">₹{estimatedTax.toLocaleString('en-IN')}</span>
                   </div>
                   
                   <hr className="border-white/5" />
                   
                   <div className="flex justify-between text-sm font-bold text-white tracking-normal pt-2">
                     <span className="uppercase text-xs tracking-wider">TOTAL VALUE</span>
-                    <span className="font-mono text-cyan-400 text-base">${total.toFixed(2)}</span>
+                    <span className="font-mono text-cyan-400 text-base">₹{total.toLocaleString('en-IN')}</span>
                   </div>
                 </div>
               </div>

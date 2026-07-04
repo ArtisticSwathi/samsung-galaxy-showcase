@@ -139,11 +139,11 @@ function ProductCard({ product, index }) {
         {/* Price display */}
         <div className="flex items-baseline gap-3">
           <span className="text-3xl md:text-4xl font-mono font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
-            ${totalPrice.toFixed(2)}
+            ₹{totalPrice.toLocaleString('en-IN')}
           </span>
           {selectedStorage && selectedStorage.priceModifier > 0 && (
             <span className="text-xs text-white/40 line-through font-mono">
-              ${(product.price + 150).toFixed(2)}
+              ₹{(product.price + 150).toLocaleString('en-IN')}
             </span>
           )}
         </div>
@@ -183,7 +183,7 @@ function ProductCard({ product, index }) {
               <div className="flex justify-between text-xs tracking-wider font-mono">
                 <span className="text-white/40 uppercase">Storage Capacity</span>
                 <span className="text-cyan-400 font-semibold">
-                  {selectedStorage?.priceModifier > 0 ? `+$${selectedStorage.priceModifier}` : 'Base Spec'}
+                  {selectedStorage?.priceModifier > 0 ? `+₹${selectedStorage.priceModifier.toLocaleString('en-IN')}` : 'Base Spec'}
                 </span>
               </div>
               <div className="grid grid-cols-3 gap-3">
@@ -199,7 +199,7 @@ function ProductCard({ product, index }) {
                   >
                     <p className="text-xs tracking-wider">{storage.size}</p>
                     <p className="text-[8px] font-mono text-cyan-400/50 mt-0.5 uppercase">
-                      {storage.priceModifier > 0 ? `+$${storage.priceModifier}` : 'Standard'}
+                      {storage.priceModifier > 0 ? `+₹${storage.priceModifier.toLocaleString('en-IN')}` : 'Standard'}
                     </p>
                   </button>
                 ))}

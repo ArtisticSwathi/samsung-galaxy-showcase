@@ -85,7 +85,7 @@ export default function OrderConfirmationPage() {
                       <div className="font-light text-white/70">
                         {item.name} <span className="text-white/40 text-[10px] uppercase font-mono">({item.color} • {item.storage} • x{item.quantity})</span>
                       </div>
-                      <span className="font-mono text-white">${(item.price * item.quantity).toFixed(2)}</span>
+                      <span className="font-mono text-white">₹{(item.price * item.quantity).toLocaleString('en-IN')}</span>
                     </div>
                   ))}
                 </div>
@@ -106,19 +106,19 @@ export default function OrderConfirmationPage() {
                   <h4 className="font-bold text-white uppercase tracking-wider text-right">Payment Summary</h4>
                   <div className="flex justify-between md:justify-end gap-6">
                     <span>Subtotal</span>
-                    <span className="font-mono text-white">${currentOrder.subtotal.toFixed(2)}</span>
+                    <span className="font-mono text-white">₹{currentOrder.subtotal.toLocaleString('en-IN')}</span>
                   </div>
                   <div className="flex justify-between md:justify-end gap-6">
                     <span>Complimentary Express Shipping</span>
-                    <span className="text-cyan-400 font-medium font-mono">$0.00</span>
+                    <span className="text-cyan-400 font-medium font-mono">₹0</span>
                   </div>
                   <div className="flex justify-between md:justify-end gap-6">
                     <span>Estimated Tax (8%)</span>
-                    <span className="font-mono text-white">${currentOrder.tax.toFixed(2)}</span>
+                    <span className="font-mono text-white">₹{currentOrder.tax.toLocaleString('en-IN')}</span>
                   </div>
                   <div className="flex justify-between md:justify-end gap-6 text-sm font-bold text-white tracking-normal pt-2 border-t border-white/5">
                     <span className="uppercase text-xs tracking-wider">TOTAL CHARGED</span>
-                    <span className="font-mono text-cyan-400 text-sm">${currentOrder.total.toFixed(2)}</span>
+                    <span className="font-mono text-cyan-400 text-sm">₹{currentOrder.total.toLocaleString('en-IN')}</span>
                   </div>
                 </div>
               </div>

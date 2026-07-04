@@ -33,7 +33,7 @@ async function seedDatabase() {
     await Product.create([
       {
         name: "Samsung Galaxy S26 5G",
-        price: 999.00,
+        price: 79999.00,
         description: "Android 16, 12 GB RAM, 3.8 GHz CPU, AI Phone, Photo Assist, Creative Studio, 50MP Camera with ProVisual Engine, 4300mAh Battery.",
         category: "newly-launched",
         variants: [
@@ -42,7 +42,7 @@ async function seedDatabase() {
         ],
         storages: [
           { size: "256GB", priceModifier: 0 },
-          { size: "512GB", priceModifier: 120 }
+          { size: "512GB", priceModifier: 8000 }
         ],
         specs: {
           display: '6.2" Dynamic AMOLED 2X, FHD+, 120Hz',
@@ -54,7 +54,7 @@ async function seedDatabase() {
       },
       {
         name: "Samsung Galaxy Z Fold7 5G",
-        price: 2249.00, // Dollar equivalent of ₹1,86,999.00
+        price: 186999.00, // Actual ₹1,86,999.00
         description: "Android 16.0, 12 GB RAM, Snapdragon 8 Elite, 4.47 GHz, 200MP Camera, Ultra-Smooth Gaming, Google Gemini.",
         category: "newly-launched",
         variants: [
@@ -63,8 +63,8 @@ async function seedDatabase() {
         ],
         storages: [
           { size: "256GB", priceModifier: 0 },
-          { size: "512GB", priceModifier: 150 },
-          { size: "1TB", priceModifier: 350 }
+          { size: "512GB", priceModifier: 12000 },
+          { size: "1TB", priceModifier: 24000 }
         ],
         specs: {
           display: '7.6" Main Screen Dynamic AMOLED 2X, 120Hz Foldable',
@@ -76,7 +76,7 @@ async function seedDatabase() {
       },
       {
         name: "Samsung Galaxy S25 Ultra 5G",
-        price: 1025.00, // Dollar equivalent of ₹84,999.00
+        price: 84999.00, // Actual ₹84,999.00
         description: "Android 15.0, 12 GB RAM, Snapdragon 8 Elite, 4.47 GHz, 200MP Camera, S Pen Included, Long Battery Life.",
         category: "newly-launched",
         variants: [
@@ -85,8 +85,8 @@ async function seedDatabase() {
         ],
         storages: [
           { size: "256GB", priceModifier: 0 },
-          { size: "512GB", priceModifier: 120 },
-          { size: "1TB", priceModifier: 320 }
+          { size: "512GB", priceModifier: 10000 },
+          { size: "1TB", priceModifier: 20000 }
         ],
         specs: {
           display: '6.8" Flat Dynamic AMOLED 2X, QHD+, 120Hz',

@@ -105,7 +105,7 @@ export default function CartDrawer() {
 
                       {/* Item Subtotal Price */}
                       <span className="text-xs font-semibold text-cyan-400 font-mono">
-                        ${(item.price * item.quantity).toFixed(2)}
+                        ₹{(item.price * item.quantity).toLocaleString('en-IN')}
                       </span>
                     </div>
                   </div>
@@ -129,7 +129,7 @@ export default function CartDrawer() {
             <div className="px-6 py-8 border-t border-white/5 bg-black/40 space-y-6">
               <div className="flex items-center justify-between text-xs tracking-wide">
                 <span className="text-white/60 font-light">Subtotal</span>
-                <span className="text-sm font-bold text-white font-mono">${subtotal.toFixed(2)}</span>
+                <span className="text-sm font-bold text-white font-mono">₹{subtotal.toLocaleString('en-IN')}</span>
               </div>
               <p className="text-[10px] text-white/40 font-light leading-relaxed">
                 Shipping and taxes calculated at checkout. Enjoy free premium delivery on this luxury purchase.
