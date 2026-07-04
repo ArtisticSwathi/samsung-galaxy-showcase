@@ -11,6 +11,16 @@ const AddressSchema = new mongoose.Schema({
   isDefault: { type: Boolean, default: false }
 });
 
+const CartItemSchema = new mongoose.Schema({
+  productId: { type: String, required: true },
+  name: { type: String, required: true },
+  price: { type: Number, required: true },
+  color: { type: String },
+  storage: { type: String },
+  image: { type: String },
+  quantity: { type: Number, default: 1 }
+});
+
 const UserSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -36,6 +46,7 @@ const UserSchema = new mongoose.Schema({
     default: '',
   },
   addresses: [AddressSchema],
+  cart: [CartItemSchema],
   joinDate: {
     type: Date,
     default: Date.now,

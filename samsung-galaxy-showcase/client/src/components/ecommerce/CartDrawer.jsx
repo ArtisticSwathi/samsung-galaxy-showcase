@@ -18,7 +18,7 @@ export default function CartDrawer() {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden font-sans">
+    <div className="fixed inset-0 z-[1100] overflow-hidden font-sans">
       {/* Background Backdrop Overlay */}
       <div 
         className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300"

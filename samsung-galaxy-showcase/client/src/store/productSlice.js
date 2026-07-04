@@ -1,47 +1,28 @@
-import { createSlice } from '@reduxjs/toolkit'
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+
+export const fetchProducts = createAsyncThunk(
+  'products/fetchProducts',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await fetch(`${API_URL}/products`);
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to fetch products');
+      }
+      return data;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
 
 const initialState = {
-  products: [
-    {
-      id: 's23-ultra',
-      name: 'Samsung Galaxy S23 Ultra',
-      basePrice: 1199.99,
-      colors: [
-        { name: 'Phantom Black', hex: '#1C1C1E', label: 'Black' },
-        { name: 'Cream', hex: '#F5F5F0', label: 'Cream' },
-        { name: 'Green', hex: '#2E3B33', label: 'Green' },
-        { name: 'Lavender', hex: '#E6D7E8', label: 'Lavender' }
-      ],
-      storages: [
-        { size: '256GB', priceModifier: 0 },
-        { size: '512GB', priceModifier: 150.00 },
-        { size: '1TB', priceModifier: 350.00 }
-      ],
-      specs: {
-        camera: '200 MP Ultra-Resolution Sensor with Nightography',
-        processor: 'Snapdragon® 8 Gen 2 Mobile Platform for Galaxy',
-        display: '6.8" Dynamic AMOLED 2X, QHD+, 120Hz Refresh Rate',
-        battery: '5000 mAh (typical) with 45W Super Fast Charging 2.0',
-        spen: 'Integrated S Pen for seamless sketching, writing, and controls',
-        material: 'Armor Aluminum Frame with Corning® Gorilla® Glass Victus® 2'
-      },
-      features: [
-        {
-          title: '200MP Main Camera',
-          description: 'Capture stunningly clear photos even in low-light environments with advanced adaptive pixel technology.'
-        },
-        {
-          title: 'Premium Gaming Power',
-          description: 'Uncompromising speeds and performance with the customized Snapdragon 8 Gen 2 processor, featuring ray tracing.'
-        },
-        {
-          title: 'Cinematic Display',
-          description: 'A massive 6.8-inch screen with vision booster technology that adjusts color and contrast to match ambient lighting.'
-        }
-      ]
-    }
-  ],
-  selectedProductId: 's23-ultra',
+  products: [],
+  selectedProductId: null,
+  isLoading: false,
+  error: null,
 }
 
 const productSlice = createSlice({
@@ -51,6 +32,37 @@ const productSlice = createSlice({
     selectProduct(state, action) {
       state.selectedProductId = action.payload
     }
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchProducts.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchProducts.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.products = action.payload.map(p => ({
+          id: p._id,
+          name: p.name,
+          price: p.price,
+          basePrice: p.price || p.basePrice,
+          description: p.description,
+          category: p.category,
+          rating: p.rating || 5,
+          variants: p.variants || [],
+          colors: (p.variants || []).map(v => ({ name: v.colorName, hex: v.colorHex })),
+          storages: p.storages || [],
+          specs: p.specs || {},
+          createdAt: p.createdAt
+        }));
+        if (state.products.length > 0 && !state.selectedProductId) {
+          state.selectedProductId = state.products[0].id;
+        }
+      })
+      .addCase(fetchProducts.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload || 'Something went wrong';
+      });
   }
 })
 

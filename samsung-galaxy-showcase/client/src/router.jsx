@@ -2,6 +2,7 @@ import { createBrowserRouter } from 'react-router-dom'
 import App from './App'
 import Experience3DPage from './pages/Experience3DPage'
 import ShopPage from './pages/ShopPage'
+import ProductsPage from './pages/ProductsPage'
 import CheckoutPage from './pages/CheckoutPage'
 import OrderConfirmationPage from './pages/OrderConfirmationPage'
 import StoreLocatorPage from './pages/StoreLocatorPage'
@@ -22,6 +23,10 @@ export const router = createBrowserRouter([
       {
         path: 'shop',
         element: <ProtectedRoute><ShopPage /></ProtectedRoute>,
+      },
+      {
+        path: 'products',
+        element: <ProtectedRoute><ProductsPage /></ProtectedRoute>,
       },
       {
         path: 'checkout',

@@ -22,8 +22,8 @@ export default function Navbar() {
 
   // Dynamic class styling based on active page theme
   const headerStyles = isLightTheme 
-    ? "sticky top-0 w-full z-50 bg-white border-b border-neutral-200 text-neutral-800"
-    : "absolute top-0 left-0 w-full z-50 bg-gradient-to-b from-black/40 to-transparent text-white"
+    ? "sticky top-0 w-full z-[1050] bg-white border-b border-neutral-200 text-neutral-800"
+    : "absolute top-0 left-0 w-full z-[1050] bg-gradient-to-b from-black/40 to-transparent text-white"
 
   const logoStyles = isLightTheme
     ? "text-neutral-900 hover:text-cyan-600 font-mono text-sm tracking-[0.35em] uppercase font-bold transition-all duration-300"
@@ -59,6 +59,9 @@ export default function Navbar() {
           <nav className="hidden md:flex items-center gap-12">
             <Link to="/shop" className={navLinkStyles}>
               Home
+            </Link>
+            <Link to="/products" className={navLinkStyles}>
+              Catalog
             </Link>
             <Link to="/stores" className={navLinkStyles}>
               Stores
