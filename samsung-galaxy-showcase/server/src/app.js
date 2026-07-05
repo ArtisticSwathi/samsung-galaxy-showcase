@@ -5,6 +5,7 @@ const userRoutes = require('./routes/userRoutes');
 const productRoutes = require('./routes/productRoutes');
 const cartRoutes = require('./routes/cartRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
+const chatbotRoutes = require('./routes/chatbotRoutes');
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
@@ -19,6 +20,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api', paymentRoutes);
+app.use('/api/chat', chatbotRoutes);
 
 // Basic health check route
 app.get('/health', (req, res) => {

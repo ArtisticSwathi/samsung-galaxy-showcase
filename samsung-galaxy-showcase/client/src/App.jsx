@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { Outlet } from 'react-router-dom'
 import CartDrawer from './components/ecommerce/CartDrawer'
+import ChatbotWidget from './components/common/ChatbotWidget'
 import { fetchCart } from './store/cartSlice'
 
 function App() {
@@ -21,6 +22,9 @@ function App() {
 
       {/* Global sliding cart drawer */}
       <CartDrawer />
+
+      {/* Global AI Store Assistant chatbot */}
+      <ChatbotWidget />
     </div>
   )
 }
