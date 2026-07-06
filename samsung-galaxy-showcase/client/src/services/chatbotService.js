@@ -7,7 +7,9 @@
 const API_BASE = import.meta.env.VITE_API_URL || '';
 
 export async function sendChatMessage(message, history = []) {
-  const url = API_BASE + '/api/chat';
+  // If API_BASE is set (e.g. 'https://.../api'), append '/chat'
+  // Otherwise, default to relative '/api/chat' for local proxy development
+  const url = API_BASE ? `${API_BASE}/chat` : '/api/chat';
 
   const response = await fetch(url, {
     method: 'POST',
