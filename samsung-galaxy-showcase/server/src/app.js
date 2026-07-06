@@ -10,8 +10,26 @@ const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
 
-// Middleware
-app.use(cors());
+// Allowed origins: Vercel production domain + local dev
+const allowedOrigins = [
+  'https://samsung-3d-showcase-evdo.vercel.app',
+  'http://localhost:5173',
+  'http://localhost:4173',
+];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (e.g. mobile apps, curl, Postman)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS blocked: origin ${origin} not allowed`));
+    }
+  },
+  credentials: true,
+}));
+
 app.use(express.json());
 
 // Routes
