@@ -11,8 +11,12 @@ const errorHandler = require('./middleware/errorHandler');
 const app = express();
 
 const allowedOrigins = [
-  'https://samsung-3d-showcase.vercel.app',   // ✅ Vercel production frontend
+  'https://samsung-3d-showcase.vercel.app',          // old Vercel domain
+  'https://samsung-galaxy-showcase-t8fu.vercel.app', // ✅ new Vercel production domain
 ];
+
+// Also allow any *.vercel.app preview/deploy URL automatically
+const vercelPattern = /^https:\/\/[\w-]+(\.vercel\.app)$/;
 
 const corsOptions = {
   origin: (origin, callback) => {
@@ -22,7 +26,7 @@ const corsOptions = {
     // Check if the origin matches localhost with any port (e.g., http://localhost:5173, http://localhost:5174)
     const isLocalhost = /^http:\/\/localhost(:\d+)?$/.test(origin);
     
-    if (allowedOrigins.includes(origin) || isLocalhost) {
+    if (allowedOrigins.includes(origin) || isLocalhost || vercelPattern.test(origin)) {
       callback(null, true);
     } else {
       callback(new Error(`CORS blocked: origin ${origin} not allowed`));
