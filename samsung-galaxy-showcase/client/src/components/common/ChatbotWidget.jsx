@@ -1,4 +1,4 @@
-﻿import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { sendChatMessage } from '../../services/chatbotService'
 
 // Samsung-style SVG icons (inline, no dependencies)
@@ -192,7 +192,7 @@ export default function ChatbotWidget() {
             <p className="text-white text-sm font-bold leading-tight truncate">Samsung Assistant</p>
             <div className="flex items-center gap-1.5 mt-0.5">
               <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-              <span className="text-green-400 text-[10px] font-medium">Online · Powered by Gemini</span>
+              <span className="text-green-400 text-[10px] font-medium">Online</span>
             </div>
           </div>
           <button
@@ -318,12 +318,7 @@ export default function ChatbotWidget() {
           </button>
         </div>
 
-        {/* Gemini badge */}
-        <div className="text-center pb-2 flex-shrink-0">
-          <span className="text-[9px] text-white/20 font-medium tracking-wide">
-            Powered by Google Gemini · Samsung Galaxy Showcase
-          </span>
-        </div>
+
       </div>
 
       {/* Keyframe for tooltip fade-in */}

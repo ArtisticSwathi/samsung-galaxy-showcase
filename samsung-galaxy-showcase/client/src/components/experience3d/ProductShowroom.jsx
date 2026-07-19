@@ -100,7 +100,8 @@ function PhoneOnTable({ introProgressRef, view, selectedColor, selectedMaterial 
   const groupRef         = useRef()
   const allMatsRef       = useRef([])  // every material (for opacity fade)
   const bodyMatsRef      = useRef([])  // body-only (for color / finish changes)
-  const targetColorRef   = useRef(null) // THREE.Color | null (null = use originals)
+  // Initialize to lavender so phone appears purple from the first frame
+  const targetColorRef   = useRef(new THREE.Color('#9b8ec4'))
   const matInitRef       = useRef(false) // skip first selectedMaterial render
 
   // ── One-time material setup ─────────────────────────────────────────────
@@ -159,6 +160,15 @@ function PhoneOnTable({ introProgressRef, view, selectedColor, selectedMaterial 
 
     allMatsRef.current  = allMats
     bodyMatsRef.current = bodyMats
+
+    // ── Apply initial brushed metal finish immediately on load ───────────
+    const brushed = MATERIAL_PRESETS['brushed']
+    bodyMats.forEach((mat) => {
+      mat.roughness       = brushed.roughness
+      mat.metalness       = brushed.metalness
+      mat.envMapIntensity = brushed.envMapIntensity
+      mat.needsUpdate     = true
+    })
 
     // ── Scale: tallest dimension → 0.38 units ───────────────────────────
     const box = new THREE.Box3().setFromObject(scene)
@@ -312,10 +322,10 @@ export default function ProductShowroom({ view, onIntroComplete }) {
   const [orbitEnabled,     setOrbitEnabled]     = useState(false)
   const [cfgPanelVisible,  setCfgPanelVisible]  = useState(false)
 
-  // Default: null = "Original" (no color override, use GLB colors)
-  const [selectedColor,    setSelectedColor]    = useState(null)
-  // Default: 'original' = use GLB material properties (matInitRef skips first render)
-  const [selectedMaterial, setSelectedMaterial] = useState('original')
+  // Default: 'lavender' — phone shows as purple on load
+  const [selectedColor,    setSelectedColor]    = useState('#9b8ec4')
+  // Default: 'brushed' — phone uses brushed metal finish on load
+  const [selectedMaterial, setSelectedMaterial] = useState('brushed')
 
   const handleBuyNow = () => {
     if (isAuthenticated) {

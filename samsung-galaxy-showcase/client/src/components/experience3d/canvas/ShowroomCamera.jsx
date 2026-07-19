@@ -28,26 +28,25 @@ export default function ShowroomCamera({ view, configuratorMode, onIntroComplete
   const flightRef       = useRef(null)
   const orbitActive     = useRef(false)
   const orbitAngleRef   = useRef(0)
-  // true only after the enter-configurator transition completes (OrbitControls in charge)
   const cfgActiveRef    = useRef(false)
   const transitionRef   = useRef(null)
-  // track previous configuratorMode to detect transitions
   const prevCfgRef      = useRef(false)
 
-  // ── Spline flight path ───────────────────────────────────────────────────
+  // ── Spline flight path ─────────────────────────────────────────────────────
+  // Endpoint is exactly REVEAL_POS so the snap in onComplete is a zero-delta no-op
   const positionCurve = useRef(new THREE.CatmullRomCurve3([
     new THREE.Vector3(0,    0.36, 95.0),
-    new THREE.Vector3(0.15, 0.35, 70.0),
-    new THREE.Vector3(-0.1, 0.34, 45.0),
-    new THREE.Vector3(0.05, 0.33, 20.0),
-    new THREE.Vector3(0,    0.60, 1.10),
+    new THREE.Vector3(0.10, 0.42, 68.0),
+    new THREE.Vector3(-0.08,0.50, 38.0),
+    new THREE.Vector3(0.04, 0.56, 12.0),
+    new THREE.Vector3(0,    0.60,  1.10), // ← exactly REVEAL_POS
   ]))
   const targetCurve = useRef(new THREE.CatmullRomCurve3([
     new THREE.Vector3(0,    0.16, 75.0),
-    new THREE.Vector3(0.15, 0.16, 50.0),
-    new THREE.Vector3(-0.1, 0.16, 25.0),
-    new THREE.Vector3(0.05, 0.16,  5.0),
-    new THREE.Vector3(0,    0.19,  0),
+    new THREE.Vector3(0.10, 0.17, 50.0),
+    new THREE.Vector3(-0.08,0.18, 25.0),
+    new THREE.Vector3(0.04, 0.19,  5.0),
+    new THREE.Vector3(0,    0.19,  0),   // ← exactly REVEAL_LOOK
   ]))
 
   function startOrbit() {
@@ -58,29 +57,27 @@ export default function ShowroomCamera({ view, configuratorMode, onIntroComplete
     orbitActive.current = true
   }
 
-  // ── Main effect (reacts to both view and configuratorMode) ────────────────
+  // ── Main effect ────────────────────────────────────────────────────────────
   useEffect(() => {
     const wasConfigurator = prevCfgRef.current
     prevCfgRef.current = configuratorMode
 
-    // Always stop everything first
     if (flightRef.current) { flightRef.current.kill(); flightRef.current = null }
     orbitActive.current = false
 
-    // ── Case 1: entering configurator ──────────────────────────────────────
+    // Case 1: entering configurator
     if (configuratorMode) {
-      cfgActiveRef.current = false  // keep our lookAt alive during the approach tween
+      cfgActiveRef.current = false
       makeTween(camera, lookTarget, transitionRef, REVEAL_POS, REVEAL_LOOK, 1.4, 'power2.inOut', () => {
-        cfgActiveRef.current = true  // hand camera control to OrbitControls
+        cfgActiveRef.current = true
       })
       return
     }
 
-    // ── Not in configurator ────────────────────────────────────────────────
-    cfgActiveRef.current = false  // reclaim camera immediately
+    cfgActiveRef.current = false
 
     if (wasConfigurator) {
-      // ── Case 2: returning from configurator → smooth transition → orbit
+      // Case 2: returning from configurator → smooth orbit
       makeTween(camera, lookTarget, transitionRef, REVEAL_POS, REVEAL_LOOK, 1.2, 'power2.inOut', () => {
         if (view === 'showroom') {
           orbitAngleRef.current = 0
@@ -90,34 +87,32 @@ export default function ShowroomCamera({ view, configuratorMode, onIntroComplete
       return
     }
 
-    // ── Case 3: normal view change ─────────────────────────────────────────
+    // Case 3: guided intro flight
     if (view === 'guided-intro') {
       positionCurve.current.getPointAt(0, camera.position)
       targetCurve.current.getPointAt(0, lookTarget.current)
       camera.lookAt(lookTarget.current)
 
       const prog = { value: 0 }
+
       flightRef.current = gsap.to(prog, {
-        value: 1.0, duration: 5.0, ease: 'none',
+        value: 1.0,
+        // ── Total flight duration ─────────────────────────────────────────
+        // power3.out: rockets in fast, then decelerates to a silky-smooth float stop.
+        // No manual easing math — GSAP handles velocity = 0 at t=1 naturally.
+        duration: 5.5,
+        ease: 'power3.out',
         onUpdate: () => {
-          const p = prog.value
-          let easedT
-          if (p <= 0.54)       easedT = 1.605 * p
-          else if (p <= 0.6)   { const s = 5*p; easedT = 0.321*(2.85 - Math.pow(3.0-s,2)/0.6) }
-          else if (p <= 0.76)  easedT = 0.915
-          else                 { const u=(5*p-3.8)/1.2; easedT=0.915+0.085*(u*u*(3-2*u)) }
-          positionCurve.current.getPointAt(easedT, camera.position)
-          targetCurve.current.getPointAt(easedT, lookTarget.current)
-          if (p > 0.6 && p <= 0.76) {
-            const t = 5*p - 3.0
-            let env = 1.0
-            if (t < 0.15) env = t/0.15; else if (t > 0.65) env = (0.8-t)/0.15
-            camera.position.y += Math.sin(t*18)*0.0008*env
-            camera.position.x += Math.cos(t*15)*0.0005*env
-          }
-          if (onProgressUpdate) onProgressUpdate(p)
+          const t = prog.value
+
+          // Sample spline directly — GSAP's ease controls velocity, no manual remapping
+          positionCurve.current.getPointAt(t, camera.position)
+          targetCurve.current.getPointAt(t, lookTarget.current)
+
+          if (onProgressUpdate) onProgressUpdate(t)
         },
         onComplete: () => {
+          // Snap cleanly — spline endpoint == REVEAL_POS so this is zero-delta
           camera.position.copy(REVEAL_POS)
           lookTarget.current.copy(REVEAL_LOOK)
           camera.lookAt(lookTarget.current)
@@ -138,21 +133,21 @@ export default function ShowroomCamera({ view, configuratorMode, onIntroComplete
   }, [view, configuratorMode]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Frame loop ─────────────────────────────────────────────────────────────
-  useFrame((state, delta) => {
-    // When OrbitControls is active, don't clobber the camera
+  useFrame((_, delta) => {
     if (cfgActiveRef.current) return
 
     if (orbitActive.current) {
-      // Increment orbit angle with medium speed (0.22 rad/sec)
-      // One full 360-degree rotation takes 2 * Math.PI / 0.22 ≈ 28.5 seconds
-      orbitAngleRef.current += delta * 0.22
+      // Gentle orbit — 0.18 rad/sec for a slow, premium float
+      orbitAngleRef.current += delta * 0.18
 
-      const radiusX = 1.05
-      const radiusZ = 1.10
-      const height = 0.60 + Math.sin(orbitAngleRef.current * 1.5) * 0.05
+      const angle  = orbitAngleRef.current
+      const rx     = 1.05
+      const rz     = 1.10
+      // Subtle vertical bob for a "floating" feel
+      const height = 0.60 + Math.sin(angle * 0.8) * 0.04
 
-      camera.position.x = radiusX * Math.sin(orbitAngleRef.current)
-      camera.position.z = radiusZ * Math.cos(orbitAngleRef.current)
+      camera.position.x = rx * Math.sin(angle)
+      camera.position.z = rz * Math.cos(angle)
       camera.position.y = height
 
       lookTarget.current.set(0, 0.19, 0)
