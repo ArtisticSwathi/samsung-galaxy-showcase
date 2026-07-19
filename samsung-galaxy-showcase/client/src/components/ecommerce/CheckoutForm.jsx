@@ -275,7 +275,7 @@ export default function CheckoutForm() {
           )}
         </button>
         <p className="text-[10px] text-center text-white/40 tracking-wider font-light mt-3">
-          🔒 Secure 256-bit SSL encrypted connection. Powered by Stripe.
+          🔒 Secure 256-bit SSL encrypted connection.
         </p>
       </div>
 

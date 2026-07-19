@@ -1,16 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { useNavigate, useLocation } from 'react-router-dom'
 import { signUp, logIn, clearAuthError } from '../../store/authSlice'
-import store from '../../store/store'
 
-export default function AuthModal({ isOpen, onClose }) {
+export default function AuthModal({ isOpen, onClose, defaultMode = 'login' }) {
   const dispatch = useDispatch()
-  const navigate = useNavigate()
-  const location = useLocation()
   const { isAuthenticated, authError, isLoading } = useSelector((state) => state.auth)
 
-  const [mode, setMode] = useState('login') // 'login' | 'signup'
+  const [mode, setMode] = useState(defaultMode) // 'login' | 'signup'
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -19,19 +15,21 @@ export default function AuthModal({ isOpen, onClose }) {
 
   const modalRef = useRef(null)
 
-  // Redirect and close modal on successful authentication
+  // Open shop in a new tab on successful authentication
   useEffect(() => {
     if (isAuthenticated && isOpen) {
       onClose()
-      if (location.pathname === '/') {
-        // Open E-commerce website in a new browser tab
-        window.open('/shop', '_blank')
-      } else {
-        // Redirect in current tab if we are already in the E-commerce flow
-        navigate('/shop')
-      }
+      // Open the ecommerce page in a new browser tab
+      window.open('/shop', '_blank')
     }
-  }, [isAuthenticated, isOpen, onClose, navigate, location.pathname])
+  }, [isAuthenticated, isOpen, onClose])
+
+  // Reset mode to defaultMode when modal re-opens
+  useEffect(() => {
+    if (isOpen) {
+      setMode(defaultMode)
+    }
+  }, [isOpen, defaultMode])
 
   // Reset form when modal opens/closes or mode changes
   useEffect(() => {

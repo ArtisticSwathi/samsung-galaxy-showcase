@@ -319,7 +319,7 @@ export default function ProductShowroom({ view, onIntroComplete }) {
 
   const handleBuyNow = () => {
     if (isAuthenticated) {
-      navigate('/shop')
+      window.open('/shop', '_blank')
     } else {
       setShowAuthModal(true)
     }
@@ -414,20 +414,15 @@ export default function ProductShowroom({ view, onIntroComplete }) {
         </Canvas>
       </div>
 
-      {/* ── Skip Intro ── */}
-      <div className={`absolute top-6 right-6 transition-opacity duration-500 ${
-        view === 'guided-intro' ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-      }`}>
-        <button onClick={onIntroComplete}
-          className="px-5 py-2.5 bg-black/40 hover:bg-cyan-950/20 text-white border border-white/15 hover:border-cyan-400/50 rounded-full text-[9px] font-mono tracking-[0.2em] uppercase transition-all duration-300 cursor-pointer">
-          Skip Intro ➔
-        </button>
-      </div>
+
 
       {/* ── Showroom action buttons ── */}
       <div className={`absolute bottom-10 right-10 flex flex-col gap-3 transition-all duration-700 ease-out pointer-events-auto ${
         buttonsVisible && !configuratorMode ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6 pointer-events-none'
       }`}>
+
+
+
         <button onClick={handleBuyNow}
           className="relative px-8 py-3.5 rounded-2xl text-sm font-semibold tracking-wide text-white cursor-pointer transition-all duration-300 hover:scale-[1.03] active:scale-[0.98]"
           style={{ background:'linear-gradient(135deg,#1a6aff,#0044cc)', boxShadow:'0 0 24px rgba(26,106,255,0.5),inset 0 1px 0 rgba(255,255,255,0.15)' }}
@@ -476,9 +471,11 @@ export default function ProductShowroom({ view, onIntroComplete }) {
           <div className={`absolute top-6 left-1/2 -translate-x-1/2 text-center pointer-events-none
             transition-all duration-700 ease-out
             ${cfgPanelVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-3'}`}>
-            <p className="text-[9px] font-mono tracking-[0.35em] text-cyan-400/70 uppercase mb-0.5">Samsung</p>
-            <h2 className="text-sm font-light tracking-[0.2em] text-white uppercase">Galaxy S23 Ultra</h2>
-            <p className="text-[8px] font-mono tracking-[0.3em] text-white/35 uppercase mt-0.5">Product Configurator</p>
+            <div className="px-6 py-3 rounded-2xl" style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <p className="text-[10px] font-mono tracking-[0.4em] text-cyan-400 uppercase mb-1">Samsung</p>
+              <h2 className="text-base font-semibold tracking-[0.22em] text-white uppercase">Galaxy S23 Ultra</h2>
+              <p className="text-[9px] font-mono tracking-[0.3em] text-white/70 uppercase mt-1">Product Configurator</p>
+            </div>
           </div>
 
           {/* ── Preparing hint (shown before panel animates in) ── */}
@@ -569,7 +566,7 @@ export default function ProductShowroom({ view, onIntroComplete }) {
 
       {/* Auth Modal for unauthenticated Buy Now clicks */}
       <div className="pointer-events-auto">
-        <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
+        <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} defaultMode="signup" />
       </div>
 
     </div>
